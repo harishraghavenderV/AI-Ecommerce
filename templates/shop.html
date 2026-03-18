@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Store{% endblock %}
+{% block content %}
+<div class="max-w-[1200px] mx-auto px-6 py-10">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+            <p class="section-eyebrow mb-1">Store</p>
+            <h1 class="text-[40px] font-bold tracking-tight text-apple-text leading-tight">
+                {% if current_category %}{{ current_category }}{% elif search_q %}Results for "{{ search_q }}"{% else
+                %}All Products{% endif %}
+            </h1>
+            <p class="text-[14px] text-apple-text-secondary mt-1">{{ products|length }} product{{ 's' if products|length
+                != 1 }} found</p>
+        </div>
+        <div class="flex items-center gap-3">
+            {% if compare_ids|length > 1 %}
+            <a href="{{ url_for('compare') }}" class="btn-outline btn-sm">
+                <i class="fas fa-code-compare mr-1"></i> Compare ({{ compare_ids|length }})
+            </a>
+            {% endif %}
+            <select id="sort-select" onchange="applySort()"
+                class="apple-input text-[14px] py-2.5 px-4 w-auto min-w-[180px]">
+                <option value="newest" {{ 'selected' if current_sort=='newest' }}>Newest</option>
+                <option value="price_low" {{ 'selected' if current_sort=='price_low' }}>Price: Low to High</option>
+                <option value="price_high" {{ 'selected' if current_sort=='price_high' }}>Price: High to Low</option>
+                <option value="rating" {{ 'selected' if current_sort=='rating' }}>Top Rated</option>
+                <option value="name" {{ 'selected' if current_sort=='name' }}>Name A-Z</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-10">
+        <!-- Sidebar -->
+        <aside>
+            <div class="sticky top-16 space-y-8">
+                <!-- Categories -->
+                <div>
+                    <h4 class="text-[13px] font-semibold text-apple-text-secondary uppercase tracking-wide mb-3">
+                        Categories</h4>
+                    <div class="space-y-0.5">
+                        <a href="{{ url_for('shop') }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] {{ 'bg-apple-blue text-white font-medium' if not current_category else 'text-apple-text hover:bg-apple-bg' }} transition-all">
+                            All Products
+                        </a>
+                        {% for cat in categories %}
+                        <a href="{{ url_for('shop', category=cat) }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] {{ 'bg-apple-blue text-white font-medium' if current_category == cat else 'text-apple-text hover:bg-apple-bg' }} transition-all">
+                            {{ cat }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Price -->
+                <div>
+                    <h4 class="text-[13px] font-semibold text-apple-text-secondary uppercase tracking-wide mb-3">Price
+                        Range</h4>
+                    <div class="flex gap-2 mb-3">
+                        <input type="number" id="min-price" value="{{ min_price or '' }}" placeholder="Min"
+                            class="apple-input text-[14px] py-2.5">
+                        <span class="text-apple-text-secondary self-center">–</span>
+                        <input type="number" id="max-price" value="{{ max_price or '' }}" placeholder="Max"
+                            class="apple-input text-[14px] py-2.5">
+                    </div>
+                    <button onclick="applyPriceFilter()" class="btn-primary btn-sm w-full">Apply</button>
+                </div>
+
+                <!-- Quick Filters -->
+                <div>
+                    <h4 class="text-[13px] font-semibold text-apple-text-secondary uppercase tracking-wide mb-3">Quick
+                        Filters</h4>
+                    <div class="space-y-0.5">
+                        <a href="{{ url_for('shop', max_price=50) }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] text-apple-text hover:bg-apple-bg transition-all">Under
+                            $50</a>
+                        <a href="{{ url_for('shop', min_price=50, max_price=100) }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] text-apple-text hover:bg-apple-bg transition-all">$50
+                            – $100</a>
+                        <a href="{{ url_for('shop', min_price=100, max_price=500) }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] text-apple-text hover:bg-apple-bg transition-all">$100
+                            – $500</a>
+                        <a href="{{ url_for('shop', min_price=500) }}"
+                            class="block px-3 py-2 rounded-lg text-[14px] text-apple-text hover:bg-apple-bg transition-all">$500+</a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Grid -->
+        <div>
+            {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {% for product in products %}
+                <div class="product-card group">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}">
+                        <div class="card-image aspect-square relative">
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}"
+                                class="w-full h-full object-cover" loading="lazy">
+                            {% if product.original_price %}
+                            <div
+                                class="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-apple-red text-white text-[11px] font-semibold">
+                                -{{ ((1 - product.price/product.original_price) * 100)|int }}%
+                            </div>
+                            {% endif %}
+                            {% if product.stock > 0 and product.stock < 10 %} <div
+                                class="absolute bottom-3 left-3 px-2 py-0.5 rounded-full bg-apple-orange text-white text-[11px] font-semibold">
+                                Only {{ product.stock }} left
+                        </div>
+                        {% elif product.stock == 0 %}
+                        <div
+                            class="absolute bottom-3 left-3 px-2 py-0.5 rounded-full bg-gray-500 text-white text-[11px] font-semibold">
+                            Out of Stock
+                        </div>
+                        {% endif %}
+                </div>
+                </a>
+                <div class="p-4 pb-5">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[11px] font-medium text-apple-orange uppercase tracking-wide">{{ product.category
+                            }}</p>
+                        {% if product.avg_rating > 0 %}
+                        <div class="flex items-center gap-0.5 text-[11px]">
+                            <i class="fas fa-star text-amber-400 text-[9px]"></i>
+                            <span class="text-apple-text-secondary">{{ product.avg_rating }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}">
+                        <h3
+                            class="text-[15px] font-semibold text-apple-text group-hover:text-apple-blue transition-colors line-clamp-2 mb-2">
+                            {{ product.name }}</h3>
+                    </a>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-[17px] font-semibold">₹{{ "%.2f"|format(product.price) }}</span>
+                            {% if product.original_price %}
+                            <span class="text-[13px] text-apple-text-secondary line-through">₹{{
+                                "%.2f"|format(product.original_price) }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            {% if current_user.is_authenticated %}
+                            <button onclick="toggleWishlist({{ product.id }}, this)"
+                                class="w-8 h-8 rounded-full flex items-center justify-center transition-all {{ 'bg-red-50 text-apple-red' if product.id in wishlist_ids else 'bg-apple-bg text-apple-text-secondary hover:bg-red-50 hover:text-apple-red' }}"
+                                title="Wishlist">
+                                <i class="fas fa-heart text-[11px]"></i>
+                            </button>
+                            {% endif %}
+                            <a href="{{ url_for('compare_add', product_id=product.id) }}"
+                                class="w-8 h-8 rounded-full flex items-center justify-center bg-apple-bg text-apple-text-secondary hover:bg-blue-50 hover:text-apple-blue transition-all {{ 'bg-blue-50 text-apple-blue' if product.id in compare_ids }}"
+                                title="Compare">
+                                <i class="fas fa-code-compare text-[11px]"></i>
+                            </a>
+                            <button onclick="addToCart({{ product.id }})"
+                                class="w-8 h-8 rounded-full flex items-center justify-center bg-apple-blue text-white hover:bg-apple-blue-hover transition-all"
+                                title="Add to Cart">
+                                <i class="fas fa-plus text-[11px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-20">
+            <div class="text-5xl mb-4">🔍</div>
+            <h3 class="text-[24px] font-bold text-apple-text mb-2">No products found</h3>
+            <p class="text-apple-text-secondary mb-6">Try adjusting your filters or search query</p>
+            <a href="{{ url_for('shop') }}" class="btn-primary btn-sm">Clear All Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<script>
+    function applySort() {
+        const sort = document.getElementById('sort-select').value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', sort);
+        window.location.href = url.toString();
+    }
+    function applyPriceFilter() {
+        const minP = document.getElementById('min-price').value;
+        const maxP = document.getElementById('max-price').value;
+        const url = new URL(window.location.href);
+        if (minP) url.searchParams.set('min_price', minP); else url.searchParams.delete('min_price');
+        if (maxP) url.searchParams.set('max_price', maxP); else url.searchParams.delete('max_price');
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}

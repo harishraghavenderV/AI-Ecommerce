@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<div class="max-w-[980px] mx-auto px-6 py-10">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-[40px] font-bold tracking-tight text-apple-text">Your Orders</h1>
+        <select onchange="window.location.href='?sort='+this.value" class="apple-input text-[14px] py-2 px-4 w-auto">
+            <option value="newest" {{ 'selected' if current_sort=='newest' }}>Newest First</option>
+            <option value="oldest" {{ 'selected' if current_sort=='oldest' }}>Oldest First</option>
+        </select>
+    </div>
+    {% if orders %}
+    <div class="space-y-4">
+        {% for order in orders %}
+        <div class="bg-apple-bg rounded-2xl overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 border-b border-white">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[14px] font-bold text-apple-text">
+                        #{{ order.id }}
+                    </div>
+                    <div>
+                        <p class="text-[15px] font-semibold text-apple-text">Order #{{ order.id }}</p>
+                        <p class="text-[12px] text-apple-text-secondary">{{ order.created_at.strftime('%B %d, %Y at
+                            %I:%M %p') }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="status-badge-{{ order.id }}" class="text-[12px] font-semibold px-3 py-1 rounded-full
+                        {% if order.status == 'Confirmed' %}bg-purple-100 text-purple-700
+                        {% elif order.status == 'Packed' %}bg-amber-100 text-amber-700
+                        {% elif order.status == 'Shipped' %}bg-blue-100 text-apple-blue
+                        {% elif order.status == 'Delivered' %}bg-green-100 text-apple-green
+                        {% else %}bg-gray-100 text-apple-text-secondary{% endif %}">
+                        {{ order.status }}
+                    </span>
+                    <div class="text-right">
+                        <p class="text-[12px] text-apple-text-secondary">{{ order.payment_method }}</p>
+                        <p class="text-[17px] font-semibold text-apple-text">₹{{ "%.2f"|format(order.total) }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Tracking Progress Bar -->
+            <div class="px-5 pt-4 pb-2 bg-white/50">
+                <div class="flex items-center justify-between text-[11px] font-medium text-apple-text-secondary mb-2 px-1">
+                    <span class="{{ 'text-purple-600' if order.status in ['Confirmed', 'Packed', 'Shipped', 'Delivered'] }}">Confirmed</span>
+                    <span class="{{ 'text-amber-600' if order.status in ['Packed', 'Shipped', 'Delivered'] }}">Packed</span>
+                    <span class="{{ 'text-blue-600' if order.status in ['Shipped', 'Delivered'] }}">Shipped</span>
+                    <span class="{{ 'text-green-600' if order.status == 'Delivered' }}">Delivered</span>
+                </div>
+                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden relative">
+                    <div id="progress-bar-{{ order.id }}" class="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-in-out
+                        {% if order.status == 'Confirmed' %}bg-gradient-to-r from-purple-400 to-purple-500
+                        {% elif order.status == 'Packed' %}bg-gradient-to-r from-purple-500 to-amber-500
+                        {% elif order.status == 'Shipped' %}bg-gradient-to-r from-amber-500 to-blue-500
+                        {% elif order.status == 'Delivered' %}bg-gradient-to-r from-blue-500 to-green-500{% endif %}"
+                        style="width: {{ progress[order.id] }};">
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 flex flex-wrap gap-3">
+                {% for item in order.items %}
+                <a href="{{ url_for('product_detail', product_id=item.product.id) }}"
+                    class="flex items-center gap-3 bg-white rounded-xl p-3 hover:shadow-sm transition-all">
+                    <img src="{{ item.product.image_url }}" class="w-10 h-10 rounded-lg object-cover">
+                    <div>
+                        <p class="text-[13px] font-medium text-apple-text">{{ item.product.name }}</p>
+                        <p class="text-[11px] text-apple-text-secondary">{{ item.quantity }} × ₹{{
+                            "%.2f"|format(item.price) }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-[28px] font-bold text-apple-text mb-2">No orders yet.</h3>
+        <p class="text-apple-text-secondary mb-8">Start shopping to see your orders here.</p>
+        <a href="{{ url_for('shop') }}" class="btn-primary">Browse Products</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function updateOrderStatus() {
+        fetch('/api/orders/status')
+        .then(res => res.json())
+        .then(data => {
+            for (const [id, info] of Object.entries(data)) {
+                
+                // Update Badge
+                const badge = document.getElementById('status-badge-' + id);
+                if (badge && badge.innerText.trim() !== info.status) {
+                    badge.innerText = info.status;
+                    
+                    // Update Colors
+                    badge.className = 'text-[12px] font-semibold px-3 py-1 rounded-full ' + 
+                        (info.status === 'Confirmed' ? 'bg-purple-100 text-purple-700' :
+                         info.status === 'Packed' ? 'bg-amber-100 text-amber-700' :
+                         info.status === 'Shipped' ? 'bg-blue-100 text-apple-blue' :
+                         info.status === 'Delivered' ? 'bg-green-100 text-apple-green' : 'bg-gray-100 text-apple-text-secondary');
+                }
+                
+                // Update Progress Bar
+                const bar = document.getElementById('progress-bar-' + id);
+                if (bar) {
+                    bar.style.width = info.progress;
+                    bar.className = 'absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-in-out ' +
+                        (info.status === 'Confirmed' ? 'bg-gradient-to-r from-purple-400 to-purple-500' :
+                         info.status === 'Packed' ? 'bg-gradient-to-r from-purple-500 to-amber-500' :
+                         info.status === 'Shipped' ? 'bg-gradient-to-r from-amber-500 to-blue-500' :
+                         info.status === 'Delivered' ? 'bg-gradient-to-r from-blue-500 to-green-500' : '');
+                }
+            }
+        });
+    }
+
+    // Ping every 5 seconds for smooth real-time animation
+    setInterval(updateOrderStatus, 5000);
+</script>
+{% endblock %}

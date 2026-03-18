@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmed{% endblock %}
+{% block content %}
+<div class="max-w-[680px] mx-auto px-6 py-20 text-center">
+    <div class="animate-scale-in">
+        <div class="text-6xl mb-6">✅</div>
+        <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-2">Thank you for your order.</h1>
+        <p class="text-[17px] text-apple-text-secondary">Your order has been placed successfully.</p>
+    </div>
+
+    <div class="bg-apple-bg rounded-2xl p-8 text-left mt-10 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div>
+                <p class="text-[11px] text-apple-text-tertiary uppercase tracking-wide mb-1">Order</p>
+                <p class="text-[15px] font-semibold text-apple-text">#{{ order.id }}</p>
+            </div>
+            <div>
+                <p class="text-[11px] text-apple-text-tertiary uppercase tracking-wide mb-1">Date</p>
+                <p class="text-[15px] font-semibold text-apple-text">{{ order.created_at.strftime('%b %d, %Y') }}</p>
+            </div>
+            <div>
+                <p class="text-[11px] text-apple-text-tertiary uppercase tracking-wide mb-1">Payment</p>
+                <p class="text-[15px] font-semibold text-apple-text">{{ order.payment_method }}</p>
+            </div>
+            <div>
+                <p class="text-[11px] text-apple-text-tertiary uppercase tracking-wide mb-1">Status</p>
+                <span class="text-[13px] font-semibold text-apple-green">{{ order.status }}</span>
+            </div>
+        </div>
+        <h3 class="text-[14px] font-semibold text-apple-text mb-3">Items Ordered</h3>
+        <div class="divide-y divide-apple-border-light">
+            {% for item in order.items %}
+            <div class="flex items-center gap-4 py-3">
+                <img src="{{ item.product.image_url }}" class="w-12 h-12 rounded-xl object-cover">
+                <div class="flex-1">
+                    <p class="text-[14px] font-medium text-apple-text">{{ item.product.name }}</p>
+                    <p class="text-[12px] text-apple-text-secondary">Qty: {{ item.quantity }}</p>
+                </div>
+                <p class="text-[14px] font-semibold text-apple-text">₹{{ "%.2f"|format(item.price * item.quantity) }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-4 pt-4 border-t border-apple-border-light flex justify-between items-baseline">
+            <span class="text-[14px] text-apple-text-secondary">Delivery: {{ address.get('street', '') }}, {{
+                address.get('city', '') }}</span>
+            <span class="text-[21px] font-bold text-apple-text">₹{{ "%.2f"|format(order.total) }}</span>
+        </div>
+    </div>
+
+    <div class="flex gap-4 justify-center">
+        <a href="{{ url_for('orders') }}" class="btn-primary">View Orders</a>
+        <a href="{{ url_for('shop') }}" class="btn-outline">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

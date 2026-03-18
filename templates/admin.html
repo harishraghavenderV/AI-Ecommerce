@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="max-w-[1100px] mx-auto px-6 py-10">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <p class="section-eyebrow mb-1">Administration</p>
+            <h1 class="text-[40px] font-bold tracking-tight text-apple-text">Dashboard</h1>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ url_for('admin_tickets') }}" class="btn-outline btn-sm border-purple-300 text-purple-700 hover:bg-purple-50"><i class="fas fa-headset mr-1.5"></i> View Tickets</a>
+            <a href="{{ url_for('admin_add_product') }}" class="btn-primary btn-sm"><i class="fas fa-plus mr-1.5"></i> Add Product</a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="bg-apple-bg rounded-2xl p-5">
+            <p class="text-[12px] text-apple-text-secondary uppercase tracking-wide mb-0.5">Revenue</p>
+            <p class="text-[28px] font-bold text-apple-text tracking-tight">₹{{ "%.0f"|format(total_revenue) }}</p>
+            <span class="text-[12px] text-apple-green font-medium">↑ 12%</span>
+        </div>
+        <div class="bg-apple-bg rounded-2xl p-5">
+            <p class="text-[12px] text-apple-text-secondary uppercase tracking-wide mb-0.5">Orders</p>
+            <p class="text-[28px] font-bold text-apple-text tracking-tight">{{ total_orders }}</p>
+            <span class="text-[12px] text-apple-green font-medium">↑ 8%</span>
+        </div>
+        <div class="bg-apple-bg rounded-2xl p-5">
+            <p class="text-[12px] text-apple-text-secondary uppercase tracking-wide mb-0.5">Users</p>
+            <p class="text-[28px] font-bold text-apple-text tracking-tight">{{ total_users }}</p>
+            <span class="text-[12px] text-apple-blue font-medium">↑ 5%</span>
+        </div>
+        <div class="bg-apple-bg rounded-2xl p-5">
+            <p class="text-[12px] text-apple-text-secondary uppercase tracking-wide mb-0.5">Products</p>
+            <p class="text-[28px] font-bold text-apple-text tracking-tight">{{ products|length }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <!-- AI Insights -->
+        <div class="bg-gradient-to-br from-[#0071e3] to-[#bf4dff] rounded-2xl p-6 text-white">
+            <h3 class="text-[17px] font-semibold mb-4 flex items-center gap-2">
+                <i class="fas fa-brain"></i> AI Insights
+            </h3>
+            <div class="space-y-3">
+                {% for insight in insights %}
+                <div class="bg-white/10 backdrop-blur rounded-xl p-3 text-[13px] text-white/90">{{ insight }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Selling -->
+        <div class="bg-apple-bg rounded-2xl p-6">
+            <h3 class="text-[17px] font-semibold text-apple-text mb-4">Top Selling</h3>
+            {% if top_selling %}
+            <div class="space-y-3">
+                {% for name, sold in top_selling %}
+                <div class="flex items-center justify-between">
+                    <span class="text-[14px] text-apple-text truncate flex-1 mr-3">{{ name }}</span>
+                    <span
+                        class="text-[12px] font-semibold text-apple-green bg-green-50 px-2.5 py-1 rounded-full whitespace-nowrap">{{
+                        sold }} sold</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-apple-text-secondary text-[14px]">No sales data</p>
+            {% endif %}
+        </div>
+
+        <!-- Category Revenue -->
+        <div class="bg-apple-bg rounded-2xl p-6">
+            <h3 class="text-[17px] font-semibold text-apple-text mb-4">Revenue by Category</h3>
+            {% if cat_sales %}
+            <div class="space-y-4">
+                {% for cat, revenue in cat_sales %}
+                <div>
+                    <div class="flex justify-between text-[13px] mb-1.5">
+                        <span class="text-apple-text">{{ cat }}</span>
+                        <span class="font-semibold">₹{{ "%.0f"|format(revenue) }}</span>
+                    </div>
+                    <div class="w-full bg-apple-border-light rounded-full h-1.5">
+                        <div class="bg-apple-blue h-1.5 rounded-full transition-all"
+                            style="width: {{ (revenue / (cat_sales|map(attribute=1)|max or 1) * 100)|int }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-apple-text-secondary text-[14px]">No category data</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Low Stock -->
+    {% if low_stock %}
+    <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-10">
+        <h3 class="text-[14px] font-semibold text-apple-orange mb-3 flex items-center gap-2">
+            <i class="fas fa-exclamation-triangle"></i> Low Stock Alerts
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {% for p in low_stock %}
+            <div class="flex items-center gap-3 bg-white rounded-xl p-3">
+                <img src="{{ p.image_url }}" class="w-8 h-8 rounded-lg object-cover">
+                <div>
+                    <p class="text-[12px] font-medium text-apple-text truncate">{{ p.name }}</p>
+                    <p class="text-[11px] font-bold text-apple-red">{{ p.stock }} left</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Products Table -->
+    <div class="bg-apple-bg rounded-2xl overflow-hidden">
+        <div class="p-5 border-b border-white">
+            <h3 class="text-[17px] font-semibold text-apple-text">All Products</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-white text-left">
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Product</th>
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Category</th>
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Price</th>
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Stock</th>
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Rating</th>
+                        <th
+                            class="px-5 py-3 text-[11px] font-semibold text-apple-text-secondary uppercase tracking-wide">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white">
+                    {% for p in products %}
+                    <tr class="hover:bg-white transition-colors">
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-3">
+                                <img src="{{ p.image_url }}" class="w-8 h-8 rounded-lg object-cover">
+                                <span class="text-[13px] font-medium text-apple-text">{{ p.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-[13px] text-apple-text-secondary">{{ p.category }}</td>
+                        <td class="px-5 py-3 text-[13px] font-semibold text-apple-text">₹{{ "%.2f"|format(p.price) }}
+                        </td>
+                        <td class="px-5 py-3">
+                            <span
+                                class="text-[12px] font-medium {{ 'text-apple-green' if p.stock > 10 else 'text-apple-orange' if p.stock > 0 else 'text-apple-red' }}">{{
+                                p.stock }}</span>
+                        </td>
+                        <td class="px-5 py-3 text-[13px] text-apple-text-secondary">
+                            {% if p.avg_rating > 0 %}<i class="fas fa-star text-amber-400 text-[10px]"></i> {{
+                            p.avg_rating }}{% else %}—{% endif %}
+                        </td>
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                <a href="{{ url_for('admin_edit_product', product_id=p.id) }}"
+                                    class="text-apple-blue text-[13px] hover:underline">Edit</a>
+                                <a href="{{ url_for('admin_delete_product', product_id=p.id) }}"
+                                    onclick="return confirm('Delete this product?')"
+                                    class="text-apple-red text-[13px] hover:underline">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

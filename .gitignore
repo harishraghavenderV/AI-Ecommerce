@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Environment Variables (NEVER commit secrets!)
+.env
+
+# Database
+instance/
+*.db
+*.sqlite3
+
+# Debug / temp scripts
+debug_chat.py
+check_quota.py
+check.py
+app_new.py
+app_recovered.py
+out.txt
+fix.py
+fix_encoding.py
+fix_lineendings.py
+fix_models.py
+fix_particle_class.py
+fix_particles.py
+dedupe_lines.py
+error_log.txt
+test_chat_output.txt
+
+# OS generated
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Wishlist{% endblock %}
+{% block content %}
+<div class="max-w-[980px] mx-auto px-6 py-10">
+    <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-2">Your Wishlist</h1>
+    <p class="text-[14px] text-apple-text-secondary mb-8">{{ items|length }} saved item{{ 's' if items|length != 1 }}
+    </p>
+
+    {% if items %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for wish in items %}
+        <div class="product-card group" id="wish-{{ wish.product.id }}">
+            <a href="{{ url_for('product_detail', product_id=wish.product.id) }}">
+                <div class="card-image aspect-square"><img src="{{ wish.product.image_url }}"
+                        alt="{{ wish.product.name }}" class="w-full h-full object-cover"></div>
+            </a>
+            <div class="p-4 pb-5">
+                <p class="text-[11px] font-medium text-apple-orange uppercase tracking-wide mb-1">{{
+                    wish.product.category }}</p>
+                <a href="{{ url_for('product_detail', product_id=wish.product.id) }}">
+                    <h3
+                        class="text-[15px] font-semibold text-apple-text group-hover:text-apple-blue transition-colors line-clamp-2 mb-2">
+                        {{ wish.product.name }}</h3>
+                </a>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[17px] font-semibold">₹{{ "%.2f"|format(wish.product.price) }}</span>
+                    {% if wish.product.stock > 0 %}
+                    <span class="text-[12px] text-apple-green font-medium">In Stock</span>
+                    {% else %}
+                    <span class="text-[12px] text-apple-red font-medium">Out of Stock</span>
+                    {% endif %}
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="moveToCart({{ wish.product.id }})" class="btn-primary btn-sm flex-1">Add to
+                        Bag</button>
+                    <button onclick="removeFromWishlist({{ wish.product.id }})" class="btn-outline btn-sm px-3">
+                        <i class="fas fa-trash text-[12px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-4">❤️</div>
+        <h3 class="text-[28px] font-bold text-apple-text mb-2">Your wishlist is empty.</h3>
+        <p class="text-apple-text-secondary mb-8">Save items you love for later.</p>
+        <a href="{{ url_for('shop') }}" class="btn-primary">Browse Products</a>
+    </div>
+    {% endif %}
+</div>
+<script>
+    function moveToCart(pid) {
+        fetch('/api/wishlist/move-to-cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: pid }) })
+            .then(r => r.json()).then(d => { if (d.success) { document.getElementById('wish-' + pid).remove(); updateCartBadge(); showToast('Moved to bag!') } });
+    }
+    function removeFromWishlist(pid) {
+        fetch('/api/wishlist/toggle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: pid }) })
+            .then(r => r.json()).then(d => { if (d.success) { document.getElementById('wish-' + pid).remove(); showToast('Removed from wishlist') } });
+    }
+</script>
+{% endblock %}

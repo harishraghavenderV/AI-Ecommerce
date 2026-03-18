@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR View — {{ product.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Model Viewer for AR -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            overflow: hidden;
+        }
+
+        .ar-page {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Viewer Area ── */
+        .ar-viewer-area {
+            flex: 1;
+            position: relative;
+            background: #e8e8ed;
+        }
+
+        .ar-viewer-area model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        .ar-viewer-area iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* ── Top Bar ── */
+        .ar-top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(rgba(245, 245, 247, .9), transparent);
+        }
+
+        .ar-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 980px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .ar-pill-glass {
+            background: rgba(0, 0, 0, .06);
+            backdrop-filter: blur(20px);
+            color: #1d1d1f;
+        }
+
+        .ar-pill-glass:hover {
+            background: rgba(0, 0, 0, .1)
+        }
+
+        .ar-pill-blue {
+            background: #0071e3;
+            color: #fff;
+        }
+
+        .ar-pill-blue:hover {
+            background: #0077ED
+        }
+
+        /* ── Bottom Panel ── */
+        .ar-bottom-panel {
+            background: rgba(255, 255, 255, .95);
+            backdrop-filter: blur(20px);
+            padding: 16px 20px;
+            border-top: 1px solid rgba(0, 0, 0, .08);
+        }
+
+        .ar-product-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .ar-product-row img {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .ar-product-row h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .ar-product-row p {
+            font-size: 12px;
+            color: #86868b;
+        }
+
+        /* ── Tabs ── */
+        .ar-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .ar-tab {
+            flex: 1;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+
+        .ar-tab.active {
+            background: #0071e3;
+            color: #fff;
+        }
+
+        .ar-tab:not(.active) {
+            background: rgba(0, 0, 0, .05);
+            color: #86868b;
+        }
+
+        .ar-tab:not(.active):hover {
+            background: rgba(0, 0, 0, .08);
+            color: #1d1d1f;
+        }
+
+        /* ── Furniture Gallery ── */
+        .furniture-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            max-height: 140px;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .furniture-card {
+            background: rgba(0, 0, 0, .03);
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            border: 2px solid transparent;
+        }
+
+        .furniture-card:hover,
+        .furniture-card.active {
+            border-color: #0071e3;
+            background: rgba(0, 113, 227, .06);
+        }
+
+        .furniture-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 4px;
+        }
+
+        .furniture-card span {
+            font-size: 10px;
+            color: #86868b;
+            display: block;
+        }
+
+        /* ── View in Your Space Button (model-viewer AR) ── */
+        .ar-space-btn {
+            display: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            background: linear-gradient(135deg, #0071e3 0%, #34C759 100%);
+            color: #fff;
+            text-align: center;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, .3);
+            transition: all .2s;
+            margin-bottom: 8px;
+        }
+
+        .ar-space-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 113, 227, .4);
+        }
+
+        .ar-space-btn i {
+            font-size: 18px;
+        }
+
+        /* ── Loading Spinner ── */
+        .ar-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            background: rgba(245, 245, 247, .8);
+        }
+
+        .ar-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 0, 0, .1);
+            border-top-color: #0071e3;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        .ar-loading p {
+            color: #86868b;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ── Model Viewer custom AR button ── */
+        model-viewer .ar-button-custom {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, #0071e3, #34C759);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 980px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, .4);
+        }
+
+        /* ── Poster / Loading ── */
+        model-viewer .progress-bar {
+            display: block;
+            width: 33%;
+            height: 4px;
+            max-height: 2%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate3d(-50%, -50%, 0);
+            border-radius: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .1);
+            overflow: hidden;
+            background: rgba(0, 0, 0, .1);
+        }
+
+        model-viewer .progress-bar.hide {
+            visibility: hidden;
+            transition: visibility .3s;
+        }
+
+        model-viewer .update-bar {
+            background: #0071e3;
+            width: 0%;
+            height: 100%;
+            transition: width .3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ar-page">
+        <!-- Viewer Area -->
+        <div class="ar-viewer-area" id="viewer-area">
+            <!-- Top bar -->
+            <div class="ar-top-bar">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="ar-pill ar-pill-glass">
+                    <i class="fas fa-chevron-left"></i> Back
+                </a>
+                <div style="display:flex;gap:8px">
+                    <button onclick="toggleFullscreen()" class="ar-pill ar-pill-glass">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="ar-loading" class="ar-loading">
+                <div class="ar-spinner"></div>
+                <p>Loading 3D Model...</p>
+            </div>
+
+            <!-- Model Container: model-viewer for GLB files, Sketchfab iframe for fallback -->
+            <div id="model-container" style="width:100%;height:100%;position:relative;">
+                {% if not glb_model_url %}
+                <!-- Sketchfab UI Mask for AR Viewer fullscreen -->
+                <div
+                    style="position:absolute;top:0;left:0;width:100%;height:60px;background:#1d1d1f;z-index:20;pointer-events:none;">
+                </div>
+                {% endif %}
+
+                {% if glb_model_url %}
+                <!-- Native AR with Google Model Viewer -->
+                <model-viewer id="product-model-viewer" src="{{ glb_model_url }}" alt="{{ product.name }}"
+                    poster="{{ product.image_url }}" auto-rotate camera-controls ar
+                    ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor" shadow-intensity="1"
+                    shadow-softness="1" environment-image="neutral" exposure="1" touch-action="pan-y"
+                    style="width:100%;height:100%;background:#e8e8ed;" loading="eager">
+                    <!-- Custom AR button inside model-viewer -->
+                    <button slot="ar-button" class="ar-button-custom">
+                        <i class="fas fa-cube"></i> View in Your Space
+                    </button>
+
+                    <!-- Progress bar -->
+                    <div class="progress-bar" slot="progress-bar">
+                        <div class="update-bar"></div>
+                    </div>
+                </model-viewer>
+                {% else %}
+                <!-- Fallback: Sketchfab embed (no GLB file available) -->
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- View in Your Space Button (shown on mobile when GLB is available) -->
+        {% if glb_model_url %}
+        <button id="ar-space-btn" class="ar-space-btn" onclick="activateAR()">
+            <i class="fas fa-cube"></i>&nbsp; 👆 View in Your Space
+        </button>
+        {% endif %}
+
+        <div class="ar-product-row">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            <div>
+                <h3>{{ product.name }}</h3>
+                <p>₹{{ "%.2f"|format(product.price) }} · {{ product.category }}</p>
+            </div>
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="ar-pill ar-pill-blue"
+                style="margin-left:auto">
+                <i class="fas fa-bag-shopping"></i> Add to Bag
+            </a>
+        </div>
+    </div>
+    </div>
+
+    <!-- AR Viewer Module -->
+    <script src="{{ url_for('static', filename='js/ar-viewer.js') }}"></script>
+
+    <script>
+        let currentViewer = null;
+        const container = document.getElementById('model-container');
+        const loadingEl = document.getElementById('ar-loading');
+        const hasGlb = {{ 'true' if glb_model_url else 'false' }};
+
+        // ──── Detect mobile ────
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // ──── Show "View in Your Space" button on mobile ────
+        if (isMobile && hasGlb) {
+            const arBtn = document.getElementById('ar-space-btn');
+            if (arBtn) arBtn.style.display = 'flex';
+        }
+
+        // ──── Model Viewer events ────
+        const modelViewer = document.getElementById('product-model-viewer');
+        if (modelViewer) {
+            modelViewer.addEventListener('load', function () {
+                loadingEl.style.display = 'none';
+            });
+
+            modelViewer.addEventListener('progress', function (e) {
+                const bar = modelViewer.querySelector('.update-bar');
+                if (bar) bar.style.width = (e.detail.totalProgress * 100) + '%';
+                if (e.detail.totalProgress === 1) {
+                    const progressBar = modelViewer.querySelector('.progress-bar');
+                    if (progressBar) progressBar.classList.add('hide');
+                }
+            });
+        } else {
+            // No model-viewer, hide loading after a moment (Sketchfab will load)
+            if (!hasGlb) loadingEl.style.display = 'none';
+        }
+
+        // ──── Activate AR (trigger model-viewer's AR mode) ────
+        function activateAR() {
+            if (modelViewer && modelViewer.canActivateAR) {
+                modelViewer.activateAR();
+            } else {
+                alert('AR is not supported on this device. Please try on an Android phone with Chrome or an iPhone with Safari.');
+            }
+        }
+
+        // ──── Start AR View ────
+        if (hasGlb) {
+            // Model viewer is already in the page, loading event will hide spinner
+        } else {
+            // Fallback to Sketchfab if no GLB exists
+            if (currentViewer) currentViewer.destroy();
+            currentViewer = new ARViewer({
+                container: container,
+                productId: {{ product.id }},
+        productName: '{{ product.name }}',
+            productImage: '{{ product.image_url }}',
+            });
+        currentViewer.init();
+        loadingEl.style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

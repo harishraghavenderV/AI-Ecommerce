@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Bag{% endblock %}
+{% block content %}
+<div class="max-w-[980px] mx-auto px-6 py-10">
+    <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-2">Your Bag</h1>
+    <p class="text-[14px] text-apple-text-secondary mb-8">{{ items|length }} item{{ 's' if items|length != 1 }} in your
+        bag</p>
+
+    {% if items %}
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
+        <!-- Items -->
+        <div class="divide-y divide-apple-border-light">
+            {% for item in items %}
+            <div class="flex gap-6 py-6 cart-item" id="cart-item-{{ item.id }}">
+                <a href="{{ url_for('product_detail', product_id=item.product.id) }}">
+                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}"
+                        class="w-28 h-28 rounded-2xl object-cover hover:opacity-80 transition-opacity">
+                </a>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}"
+                                class="text-[17px] font-semibold text-apple-text hover:text-apple-blue transition-colors">{{
+                                item.product.name }}</a>
+                            <p class="text-[13px] text-apple-text-secondary mt-0.5">{{ item.product.category }}</p>
+                        </div>
+                        <p class="text-[17px] font-semibold text-apple-text" id="subtotal-{{ item.id }}">₹{{
+                            "%.2f"|format(item.product.price * item.quantity) }}</p>
+                    </div>
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="flex items-center gap-0">
+                            <button onclick="updateCart({{ item.id }}, 'decrease')"
+                                class="w-9 h-9 rounded-l-lg border border-apple-border text-apple-text hover:bg-apple-bg flex items-center justify-center transition-all">
+                                <i class="fas fa-minus text-[11px]"></i>
+                            </button>
+                            <span
+                                class="w-12 h-9 border-t border-b border-apple-border flex items-center justify-center text-[14px] font-medium"
+                                id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                            <button onclick="updateCart({{ item.id }}, 'increase')"
+                                class="w-9 h-9 rounded-r-lg border border-apple-border text-apple-text hover:bg-apple-bg flex items-center justify-center transition-all">
+                                <i class="fas fa-plus text-[11px]"></i>
+                            </button>
+                        </div>
+                        <button onclick="updateCart({{ item.id }}, 'remove')"
+                            class="text-apple-blue hover:underline text-[14px] transition-colors">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div>
+            <div class="sticky top-16 bg-apple-bg rounded-2xl p-6">
+                <h3 class="text-[17px] font-semibold text-apple-text mb-5">Order Summary</h3>
+                <div class="space-y-3 text-[14px]">
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Subtotal</span>
+                        <span class="text-apple-text font-medium" id="cart-subtotal">₹{{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Shipping</span>
+                        <span class="text-apple-green font-medium">Free</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Estimated Tax</span>
+                        <span class="text-apple-text font-medium">₹{{ "%.2f"|format(total * 0.08) }}</span>
+                    </div>
+                    <hr class="border-apple-border">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[17px] font-semibold text-apple-text">Total</span>
+                        <span class="text-[24px] font-bold text-apple-text" id="cart-total">₹{{ "%.2f"|format(total *
+                            1.08) }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('checkout') }}" class="btn-primary w-full mt-6 py-3.5 text-[17px]">Check Out</a>
+                <a href="{{ url_for('shop') }}"
+                    class="block text-center text-apple-blue text-[14px] mt-3 hover:underline">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-4">🛒</div>
+        <h3 class="text-[28px] font-bold text-apple-text mb-2">Your bag is empty.</h3>
+        <p class="text-apple-text-secondary text-[17px] mb-8">Find something you love.</p>
+        <a href="{{ url_for('shop') }}" class="btn-primary">Start Shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

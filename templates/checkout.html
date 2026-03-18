@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="max-w-[980px] mx-auto px-6 py-10">
+    <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-8">Checkout</h1>
+
+    <form method="POST" class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
+        <div class="space-y-8">
+            <!-- Address -->
+            <div>
+                <h3 class="text-[21px] font-semibold text-apple-text mb-4">Delivery Address</h3>
+                {% if addresses %}
+                <div class="space-y-3">
+                    {% for addr in addresses %}
+                    <label
+                        class="flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all
+                        {{ 'border-apple-blue bg-blue-50/50' if loop.first else 'border-apple-border-light hover:border-apple-border' }}">
+                        <input type="radio" name="address_index" value="{{ loop.index0 }}" {{ 'checked' if loop.first }}
+                            class="mt-1 accent-[#0071e3]" style="accent-color:#0071e3">
+                        <div>
+                            <span class="text-[14px] font-semibold text-apple-text">{{ addr.label }}</span>
+                            <p class="text-[14px] text-apple-text mt-0.5">{{ addr.street }}</p>
+                            <p class="text-[14px] text-apple-text-secondary">{{ addr.city }}, {{ addr.state }} {{
+                                addr.zip }}</p>
+                            <p class="text-[12px] text-apple-text-tertiary mt-1">{{ addr.phone }}</p>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <p class="text-[14px] text-amber-800">Please <a href="{{ url_for('profile') }}"
+                            class="text-apple-blue underline font-medium">add an address</a> before checkout.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Payment -->
+            <div>
+                <h3 class="text-[21px] font-semibold text-apple-text mb-4">Payment Method</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <label
+                        class="payment-option flex flex-col items-center gap-2 p-5 rounded-2xl border border-apple-blue bg-blue-50/50 cursor-pointer transition-all"
+                        data-method="Card">
+                        <input type="radio" name="payment_method" value="Card" checked class="hidden">
+                        <span class="text-2xl">💳</span>
+                        <span class="text-[14px] font-semibold text-apple-text">Card</span>
+                        <span class="text-[11px] text-apple-text-secondary">Visa, Mastercard</span>
+                    </label>
+                    <label
+                        class="payment-option flex flex-col items-center gap-2 p-5 rounded-2xl border border-apple-border-light cursor-pointer hover:border-apple-border transition-all"
+                        data-method="UPI">
+                        <input type="radio" name="payment_method" value="UPI" class="hidden">
+                        <span class="text-2xl">📱</span>
+                        <span class="text-[14px] font-semibold text-apple-text">UPI</span>
+                        <span class="text-[11px] text-apple-text-secondary">GPay, PhonePe</span>
+                    </label>
+                    <label
+                        class="payment-option flex flex-col items-center gap-2 p-5 rounded-2xl border border-apple-border-light cursor-pointer hover:border-apple-border transition-all"
+                        data-method="PayLater">
+                        <input type="radio" name="payment_method" value="PayLater" class="hidden">
+                        <span class="text-2xl">⏰</span>
+                        <span class="text-[14px] font-semibold text-apple-text">Pay Later</span>
+                        <span class="text-[11px] text-apple-text-secondary">0% interest</span>
+                    </label>
+                </div>
+                <div id="card-fields" class="mt-5 space-y-4">
+                    <div>
+                        <label class="block text-[13px] text-apple-text-secondary mb-1.5">Card Number</label>
+                        <input type="text" placeholder="4242 4242 4242 4242" maxlength="19" class="apple-input">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[13px] text-apple-text-secondary mb-1.5">Expiry</label>
+                            <input type="text" placeholder="MM/YY" maxlength="5" class="apple-input">
+                        </div>
+                        <div>
+                            <label class="block text-[13px] text-apple-text-secondary mb-1.5">CVV</label>
+                            <input type="text" placeholder="123" maxlength="4" class="apple-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div>
+            <div class="sticky top-16 bg-apple-bg rounded-2xl p-6">
+                <h3 class="text-[17px] font-semibold text-apple-text mb-5">Order Summary</h3>
+                <div class="space-y-3 mb-4">
+                    {% for item in items %}
+                    <div class="flex items-center gap-3">
+                        <img src="{{ item.product.image_url }}" class="w-12 h-12 rounded-xl object-cover">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[13px] text-apple-text font-medium truncate">{{ item.product.name }}</p>
+                            <p class="text-[12px] text-apple-text-secondary">Qty: {{ item.quantity }}</p>
+                        </div>
+                        <span class="text-[14px] font-medium text-apple-text">₹{{ "%.2f"|format(item.product.price *
+                            item.quantity) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <hr class="border-apple-border my-4">
+                <div class="space-y-2 text-[14px]">
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Subtotal</span>
+                        <span class="text-apple-text">₹{{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Shipping</span>
+                        <span class="text-apple-green">Free</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-apple-text-secondary">Tax</span>
+                        <span class="text-apple-text">₹{{ "%.2f"|format(total * 0.08) }}</span>
+                    </div>
+                    <hr class="border-apple-border">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[17px] font-semibold">Total</span>
+                        <span class="text-[24px] font-bold">₹{{ "%.2f"|format(total * 1.08) }}</span>
+                    </div>
+                </div>
+
+                <!-- Coupon Code -->
+                <div class="mt-4 pt-4 border-t border-apple-border">
+                    <label class="block text-[13px] font-medium text-apple-text mb-2">
+                        <i class="fas fa-tag text-purple-500 mr-1"></i> Have a coupon?
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" name="coupon_code" placeholder="Enter code (e.g. DEAL...)"
+                            class="flex-1 bg-white border border-apple-border rounded-xl px-3 py-2 text-[13px] text-apple-text placeholder-apple-text-tertiary focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20">
+                    </div>
+                    <p class="text-[11px] text-apple-text-tertiary mt-1.5 mb-3">
+                        💬 Negotiate prices with our AI chatbot to get coupon codes!
+                    </p>
+                    
+                    {% if current_user.loyalty_points > 0 %}
+                    <label class="flex items-center gap-2 cursor-pointer bg-purple-50 rounded-lg p-2.5 border border-purple-100">
+                        <input type="checkbox" name="use_points" class="rounded text-purple-600 focus:ring-purple-500 border-purple-300 w-4 h-4">
+                        <span class="text-[13px] font-medium text-purple-900">
+                            <i class="fas fa-gem text-purple-500 mr-1"></i> Use {{ current_user.loyalty_points }} Logic Points to save ₹{{ current_user.loyalty_points }}
+                        </span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <button type="submit"
+                    class="btn-primary w-full mt-6 py-3.5 text-[17px] {{ 'opacity-40 pointer-events-none' if not addresses }}">
+                    Place Order
+                </button>
+                <p class="text-center text-[12px] text-purple-600 font-medium mt-3 bg-purple-50 py-1.5 rounded-lg border border-purple-100">
+                    <i class="fas fa-gem"></i> You will earn ~{{ (total // 10)|int }} Logic Points
+                </p>
+                <p class="text-center text-[11px] text-apple-text-tertiary mt-3">
+                    🔒 Secure payment simulation
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.querySelectorAll('.payment-option').forEach(opt => {
+        opt.addEventListener('click', function () {
+            document.querySelectorAll('.payment-option').forEach(o => {
+                o.classList.remove('border-apple-blue', 'bg-blue-50/50');
+                o.classList.add('border-apple-border-light');
+            });
+            this.classList.add('border-apple-blue', 'bg-blue-50/50');
+            this.classList.remove('border-apple-border-light');
+            document.getElementById('card-fields').style.display = this.dataset.method === 'Card' ? 'block' : 'none';
+        });
+    });
+</script>
+{% endblock %}

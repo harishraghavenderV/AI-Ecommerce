@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Compare{% endblock %}
+{% block content %}
+<div class="max-w-[1100px] mx-auto px-6 py-10">
+    <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-2">Compare Products</h1>
+    <p class="text-[14px] text-apple-text-secondary mb-8">{{ products|length }} of 4 products selected</p>
+
+    {% if products %}
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[600px]">
+            <thead>
+                <tr>
+                    <th class="w-40 p-4 text-left text-[13px] font-semibold text-apple-text-secondary"></th>
+                    {% for p in products %}
+                    <th class="p-4 text-center min-w-[200px]">
+                        <div class="bg-apple-bg rounded-2xl p-4 relative">
+                            <a href="{{ url_for('compare_remove', product_id=p.id) }}"
+                                class="absolute top-2 right-2 w-6 h-6 rounded-full bg-white text-apple-text-secondary flex items-center justify-center hover:text-apple-red transition-colors text-[11px] shadow-sm">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            <a href="{{ url_for('product_detail', product_id=p.id) }}">
+                                <img src="{{ p.image_url }}" class="w-24 h-24 rounded-xl object-cover mx-auto mb-3">
+                                <h3
+                                    class="text-[14px] font-semibold text-apple-text hover:text-apple-blue transition-colors">
+                                    {{ p.name }}</h3>
+                            </a>
+                            <p class="text-[11px] text-apple-text-secondary mt-1">{{ p.category }}</p>
+                        </div>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t border-apple-border-light">
+                    <td class="p-4 text-[14px] font-medium text-apple-text-secondary">Price</td>
+                    {% set prices = products|map(attribute='price')|list %}
+                    {% set min_price = prices|min %}
+                    {% for p in products %}
+                    <td class="p-4 text-center">
+                        <span
+                            class="text-[21px] font-bold {{ 'text-apple-green' if p.price == min_price and products|length > 1 else 'text-apple-text' }}">₹{{
+                            "%.2f"|format(p.price) }}</span>
+                        {% if p.price == min_price and products|length > 1 %}
+                        <span class="block text-[11px] text-apple-green mt-0.5">Best Price</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="border-t border-apple-border-light">
+                    <td class="p-4 text-[14px] font-medium text-apple-text-secondary">Rating</td>
+                    {% for p in products %}
+                    <td class="p-4 text-center">
+                        <div class="flex items-center justify-center gap-0.5 mb-1">
+                            {% for i in range(5) %}
+                            <i
+                                class="fas fa-star text-[10px] {{ 'text-amber-400' if i < p.avg_rating|int else 'text-gray-200' }}"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="text-[13px] text-apple-text-secondary">{{ p.avg_rating }} ({{ p.review_count
+                            }})</span>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="border-t border-apple-border-light">
+                    <td class="p-4 text-[14px] font-medium text-apple-text-secondary">Stock</td>
+                    {% for p in products %}
+                    <td class="p-4 text-center">
+                        <span
+                            class="text-[13px] font-medium {{ 'text-apple-green' if p.stock > 10 else 'text-apple-orange' if p.stock > 0 else 'text-apple-red' }}">
+                            {% if p.stock > 10 %}In Stock{% elif p.stock > 0 %}{{ p.stock }} left{% else %}Out of
+                            Stock{% endif %}
+                        </span>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="border-t border-apple-border-light">
+                    <td class="p-4 text-[14px] font-medium text-apple-text-secondary">Description</td>
+                    {% for p in products %}
+                    <td class="p-4 text-center text-[13px] text-apple-text-secondary line-clamp-3">{{ p.description }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="border-t border-apple-border-light">
+                    <td class="p-4"></td>
+                    {% for p in products %}
+                    <td class="p-4 text-center">
+                        <button onclick="addToCart({{ p.id }})" class="btn-primary btn-sm w-full">Add to Bag</button>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-4">⚖️</div>
+        <h3 class="text-[28px] font-bold text-apple-text mb-2">No products to compare.</h3>
+        <p class="text-apple-text-secondary mb-8">Add products from the store to compare side-by-side.</p>
+        <a href="{{ url_for('shop') }}" class="btn-primary">Browse Products</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

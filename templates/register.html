@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-6 py-16">
+    <div class="w-full max-w-[400px]">
+        <div class="text-center mb-8">
+            <h1 class="text-[32px] font-bold tracking-tight text-apple-text">Create your Trenzia account</h1>
+            <p class="text-[17px] text-apple-text-secondary mt-2">One account for everything.</p>
+        </div>
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Username</label>
+                <input type="text" name="username" required class="apple-input" placeholder="Choose a username">
+            </div>
+            <div>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Email Address</label>
+                <input type="email" name="email" required class="apple-input" placeholder="name@example.com">
+            </div>
+            <div>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Password</label>
+                <input type="password" name="password" required minlength="6" class="apple-input"
+                    placeholder="Minimum 6 characters">
+            </div>
+            <div>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Confirm Password</label>
+                <input type="password" name="confirm_password" required minlength="6" class="apple-input"
+                    placeholder="Re-enter your password">
+            </div>
+            <button type="submit" class="btn-primary w-full mt-2 py-3">Create Account</button>
+        </form>
+        <div class="mt-8 pt-6 border-t border-apple-border-light text-center">
+            <p class="text-[14px] text-apple-text-secondary">
+                Already have an account? <a href="{{ url_for('login') }}"
+                    class="text-apple-blue hover:underline font-medium">Sign in →</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

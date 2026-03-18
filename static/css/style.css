@@ -1,0 +1,624 @@
+/* ─── Trenzia — Apple-Style AI Commerce Design System ─── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+/* ── CSS Variables ─────────────────────────────────────── */
+:root {
+    /* Trenzia Brand */
+    --tz-primary: #7c3aed;
+    --tz-primary-light: #a78bfa;
+    --tz-primary-dark: #5b21b6;
+    --tz-accent: #ec4899;
+    --tz-indigo: #4f46e5;
+
+    /* Apple-style surfaces */
+    --tz-bg: #ffffff;
+    --tz-bg-2: #fbfaff;
+    /* barely-there violet tint */
+    --tz-bg-3: #f5f3ff;
+    /* violet-gray section bg */
+    --tz-surface: #ffffff;
+    --tz-border: #e9e6f5;
+    --tz-border-strong: #c4b5fd;
+
+    /* Apple-style text */
+    --tz-text: #1a1035;
+    /* near-black with violet undertone */
+    --tz-text-2: #4c4780;
+    --tz-text-3: #9491bf;
+
+    /* Apple nav — light frosted glass */
+    --tz-nav-bg: rgba(255, 255, 255, 0.82);
+    --tz-nav-border: rgba(124, 58, 237, 0.12);
+
+    /* Shadows */
+    --tz-shadow-sm: 0 1px 6px rgba(124, 58, 237, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --tz-shadow: 0 4px 24px rgba(124, 58, 237, 0.10), 0 1px 4px rgba(0, 0, 0, 0.05);
+    --tz-shadow-lg: 0 12px 48px rgba(124, 58, 237, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
+    --tz-glow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+
+    --tz-radius: 20px;
+    --tz-radius-sm: 12px;
+    --tz-radius-xs: 8px;
+    --tz-radius-full: 999px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Reset & Base ──────────────────────────────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    color: var(--tz-text);
+    background: var(--tz-bg);
+    line-height: 1.47;
+    font-weight: 400;
+    letter-spacing: -0.018em;
+}
+
+/* ── Typography — Apple spacing, Trenzia color ─────────── */
+.hero-headline {
+    font-size: clamp(44px, 7.5vw, 86px);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1.03;
+    color: var(--tz-text);
+}
+
+.hero-headline-gradient {
+    font-size: clamp(44px, 7.5vw, 86px);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1.03;
+    background: linear-gradient(125deg, var(--tz-primary) 0%, var(--tz-primary-light) 45%, var(--tz-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% auto;
+    animation: gradientShift 5s ease infinite;
+}
+
+.section-headline {
+    font-size: clamp(30px, 4.5vw, 52px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+    color: var(--tz-text);
+}
+
+.section-subhead {
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: 400;
+    color: var(--tz-text-3);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+}
+
+.section-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--tz-primary);
+}
+
+/* ── Navbar — Apple frosted glass, Trenzia accent ──────── */
+.apple-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--tz-nav-bg);
+    backdrop-filter: saturate(200%) blur(24px);
+    -webkit-backdrop-filter: saturate(200%) blur(24px);
+    border-bottom: 1px solid var(--tz-nav-border);
+    transition: background 0.3s;
+}
+
+.apple-nav .nav-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--tz-text-2);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: -0.01em;
+}
+
+.apple-nav .nav-link:hover {
+    color: var(--tz-primary);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 12px 26px;
+    border-radius: var(--tz-radius-full);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, var(--tz-primary) 0%, var(--tz-indigo) 100%);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s var(--ease);
+    white-space: nowrap;
+    box-shadow: 0 3px 14px rgba(124, 58, 237, 0.28);
+    position: relative;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(124, 58, 237, 0.42);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 12px 26px;
+    border-radius: var(--tz-radius-full);
+    font-size: 15px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--tz-primary);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-secondary:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.btn-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 12px 28px;
+    border-radius: var(--tz-radius-full);
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--tz-text);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s var(--ease);
+    white-space: nowrap;
+}
+
+.btn-dark:hover {
+    background: var(--tz-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(91, 33, 182, 0.32);
+}
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 25px;
+    border-radius: var(--tz-radius-full);
+    font-size: 15px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--tz-text);
+    border: 1.5px solid var(--tz-border-strong);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s var(--ease);
+    white-space: nowrap;
+}
+
+.btn-outline:hover {
+    border-color: var(--tz-primary);
+    color: var(--tz-primary);
+    background: var(--tz-bg-3);
+}
+
+.btn-sm {
+    padding: 8px 20px;
+    font-size: 13px;
+}
+
+/* ── Product Cards — Apple clean + Trenzia glow ────────── */
+.product-card {
+    background: var(--tz-surface);
+    border-radius: var(--tz-radius);
+    overflow: hidden;
+    transition: all 0.4s var(--ease);
+    border: 1px solid var(--tz-border);
+    position: relative;
+    text-decoration: none;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--tz-shadow-lg);
+    border-color: var(--tz-border-strong);
+}
+
+.product-card .card-image {
+    background: var(--tz-bg-3);
+    overflow: hidden;
+}
+
+.product-card .card-image img {
+    transition: transform 0.6s var(--ease);
+}
+
+.product-card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+/* ── Form Inputs ───────────────────────────────────────── */
+.apple-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: var(--tz-radius-sm);
+    border: 1.5px solid var(--tz-border);
+    font-size: 15px;
+    color: var(--tz-text);
+    background: var(--tz-surface);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: -0.015em;
+}
+
+.apple-input:focus {
+    border-color: var(--tz-primary);
+    box-shadow: var(--tz-glow);
+}
+
+.apple-input::placeholder {
+    color: var(--tz-text-3);
+}
+
+.apple-input-dark {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: var(--tz-radius-sm);
+    border: 1.5px solid rgba(167, 139, 250, 0.25);
+    font-size: 15px;
+    color: #f0ecff;
+    background: rgba(124, 58, 237, 0.08);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: -0.015em;
+}
+
+.apple-input-dark:focus {
+    border-color: var(--tz-primary-light);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+}
+
+.apple-input-dark::placeholder {
+    color: rgba(167, 139, 250, 0.45);
+}
+
+/* ── Sections ──────────────────────────────────────────── */
+.section-light {
+    background: var(--tz-bg);
+}
+
+.section-gray {
+    background: var(--tz-bg-3);
+}
+
+.section-dark {
+    background: var(--tz-text);
+    color: #f0ecff;
+}
+
+.section-black {
+    background: #0a0618;
+    color: #f0ecff;
+}
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes gradientShift {
+
+    0%,
+    100% {
+        background-position: 0% center;
+    }
+
+    50% {
+        background-position: 100% center;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseRing {
+    0% {
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.7s var(--ease) both;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease both;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.5s ease both;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.5s var(--ease) both;
+}
+
+.animate-float {
+    animation: float 5s ease-in-out infinite;
+}
+
+.delay-100 {
+    animation-delay: 0.1s;
+}
+
+.delay-200 {
+    animation-delay: 0.2s;
+}
+
+.delay-300 {
+    animation-delay: 0.3s;
+}
+
+.delay-400 {
+    animation-delay: 0.4s;
+}
+
+.delay-500 {
+    animation-delay: 0.5s;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--tz-border-strong);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--tz-primary-light);
+}
+
+/* ── Toast ─────────────────────────────────────────────── */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+    z-index: 200;
+    padding: 14px 28px;
+    background: var(--tz-text);
+    border-radius: var(--tz-radius-full);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    transition: all 0.4s var(--ease);
+    pointer-events: none;
+    box-shadow: var(--tz-shadow-lg);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ── Flash messages ────────────────────────────────────── */
+.flash-msg {
+    animation: slideIn 0.4s ease both;
+}
+
+/* ── Search ────────────────────────────────────────────── */
+#search-results .search-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-bottom: 1px solid var(--tz-border);
+    text-decoration: none;
+    color: inherit;
+}
+
+#search-results .search-item:last-child {
+    border-bottom: none;
+}
+
+#search-results .search-item:hover {
+    background: var(--tz-bg-3);
+}
+
+/* ── Selection ─────────────────────────────────────────── */
+::selection {
+    background: rgba(124, 58, 237, 0.14);
+    color: var(--tz-text);
+}
+
+/* ── Line clamp ────────────────────────────────────────── */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Cart remove ───────────────────────────────────────── */
+.cart-item.removing {
+    transform: translateX(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* ── Focus visible ─────────────────────────────────────── */
+*:focus-visible {
+    outline: 3px solid rgba(124, 58, 237, 0.45);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* ── Tile ──────────────────────────────────────────────── */
+.tile {
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.4s var(--ease);
+}
+
+.tile:hover {
+    transform: scale(1.01);
+}
+
+/* ── Star rating ───────────────────────────────────────── */
+.star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+}
+
+/* ── Trenzia Utility ───────────────────────────────────── */
+.tz-card {
+    background: var(--tz-surface);
+    border: 1px solid var(--tz-border);
+    border-radius: var(--tz-radius);
+    transition: all 0.3s var(--ease);
+}
+
+.tz-card:hover {
+    border-color: var(--tz-border-strong);
+    box-shadow: var(--tz-shadow);
+    transform: translateY(-3px);
+}
+
+/* ── Trenzia pill badge ────────────────────────────────── */
+.tz-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: var(--tz-radius-full);
+    font-size: 11px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--tz-primary), var(--tz-indigo));
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}

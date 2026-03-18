@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="max-w-[980px] mx-auto px-6 py-10">
+    <h1 class="text-[40px] font-bold tracking-tight text-apple-text mb-8">Your Profile</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Profile -->
+        <div>
+            <div class="bg-apple-bg rounded-2xl p-6">
+                <div class="text-center mb-6">
+                    <div
+                        class="w-20 h-20 rounded-full bg-gradient-to-br from-[#0071e3] to-[#bf4dff] flex items-center justify-center mx-auto text-[28px] font-bold text-white">
+                        {{ current_user.username[0]|upper }}
+                    </div>
+                    <h2 class="text-[21px] font-bold text-apple-text mt-4">{{ current_user.username }}</h2>
+                    <p class="text-[14px] text-apple-text-secondary">{{ current_user.email }}</p>
+                    {% if current_user.is_admin %}
+                    <span class="inline-block mt-2 px-3 py-1 rounded-full bg-orange-100 text-apple-orange text-[12px] font-semibold">Admin</span>
+                    {% endif %}
+                    <div class="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-indigo-100 px-4 py-2 rounded-xl text-[14px] font-semibold text-purple-700 shadow-sm border border-purple-200">
+                        <i class="fas fa-gem text-purple-500"></i>
+                        <span>{{ current_user.loyalty_points }} Logic Points</span>
+                    </div>
+                </div>
+                <form method="POST" class="space-y-3">
+                    <input type="hidden" name="action" value="update_profile">
+                    <div>
+                        <label class="block text-[12px] text-apple-text-secondary mb-1">Username</label>
+                        <input type="text" name="username" value="{{ current_user.username }}"
+                            class="apple-input text-[14px] py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-[12px] text-apple-text-secondary mb-1">Email</label>
+                        <input type="email" name="email" value="{{ current_user.email }}"
+                            class="apple-input text-[14px] py-2.5">
+                    </div>
+                    <button type="submit" class="btn-primary btn-sm w-full">Update Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Addresses & Orders -->
+        <div class="lg:col-span-2 space-y-8">
+            <div>
+                <h3 class="text-[21px] font-semibold text-apple-text mb-4">Saved Addresses</h3>
+                {% if addresses %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                    {% for addr in addresses %}
+                    <div class="bg-apple-bg rounded-2xl p-4 relative group">
+                        <span class="text-[12px] font-semibold text-apple-blue">{{ addr.label }}</span>
+                        <p class="text-[14px] text-apple-text mt-1">{{ addr.street }}</p>
+                        <p class="text-[13px] text-apple-text-secondary">{{ addr.city }}, {{ addr.state }} {{ addr.zip
+                            }}</p>
+                        <p class="text-[12px] text-apple-text-tertiary mt-1">{{ addr.phone }}</p>
+                        <form method="POST"
+                            class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <input type="hidden" name="action" value="delete_address">
+                            <input type="hidden" name="address_index" value="{{ loop.index0 }}">
+                            <button type="submit" class="text-apple-red text-[12px] hover:underline">Remove</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-apple-text-secondary text-[14px] mb-4">No addresses saved yet.</p>
+                {% endif %}
+
+                <form method="POST" class="border-t border-apple-border-light pt-6 space-y-4">
+                    <input type="hidden" name="action" value="add_address">
+                    <h4 class="text-[14px] font-semibold text-apple-text">Add New Address</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" name="label" placeholder="Label (Home, Office...)" required
+                            class="apple-input text-[14px] py-2.5">
+                        <input type="text" name="phone" placeholder="Phone" required
+                            class="apple-input text-[14px] py-2.5">
+                        <input type="text" name="street" placeholder="Street Address" required
+                            class="col-span-2 apple-input text-[14px] py-2.5">
+                        <input type="text" name="city" placeholder="City" required
+                            class="apple-input text-[14px] py-2.5">
+                        <div class="flex gap-3">
+                            <input type="text" name="state" placeholder="State" required
+                                class="flex-1 apple-input text-[14px] py-2.5">
+                            <input type="text" name="zip" placeholder="ZIP" required
+                                class="w-24 apple-input text-[14px] py-2.5">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-outline btn-sm">Add Address</button>
+                </form>
+            </div>
+
+            <div>
+                <h3 class="text-[21px] font-semibold text-apple-text mb-4">Recent Orders</h3>
+                {% if orders %}
+                <div class="divide-y divide-apple-border-light">
+                    {% for order in orders[:5] %}
+                    <div class="flex items-center justify-between py-4">
+                        <div>
+                            <p class="text-[14px] font-semibold text-apple-text">Order #{{ order.id }}</p>
+                            <p class="text-[12px] text-apple-text-secondary">{{ order.created_at.strftime('%b %d, %Y')
+                                }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[15px] font-semibold text-apple-text">₹{{ "%.2f"|format(order.total) }}</p>
+                            <span
+                                class="text-[11px] font-medium {{ 'text-apple-green' if order.status == 'Confirmed' else 'text-apple-blue' }}">{{
+                                order.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-apple-text-secondary text-[14px]">No orders yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

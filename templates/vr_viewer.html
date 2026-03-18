@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Experience — {{ product.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #f5f5f7;
+            overflow: hidden;
+        }
+
+        #vr-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        .vr-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 32px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+        }
+
+        .vr-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 980px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            color: #f5f5f7;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .vr-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .vr-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 980px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vr-btn-blue {
+            background: #0071e3;
+            color: #fff;
+        }
+
+        .vr-btn-blue:hover {
+            background: #0077ED;
+        }
+
+        .vr-btn-glass {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f5f5f7;
+        }
+
+        .vr-btn-glass:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="vr-back">
+        <i class="fas fa-chevron-left"></i> Back
+    </a>
+
+    <canvas id="vr-canvas"></canvas>
+
+    <div class="vr-overlay">
+        <div style="max-width:680px;margin:0 auto;text-align:center">
+            <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.03em;margin-bottom:4px">{{ product.name }}</h2>
+            <p style="font-size:14px;color:#86868b;margin-bottom:16px">360° Virtual Showroom · Drag to rotate · Scroll
+                to zoom</p>
+            <div style="display:flex;gap:8px;justify-content:center">
+                <button onclick="resetView()" class="vr-btn vr-btn-glass"><i class="fas fa-arrow-rotate-left"></i>
+                    Reset</button>
+                <button onclick="toggleAutoRotate()" id="auto-rotate-btn" class="vr-btn vr-btn-glass"><i
+                        class="fas fa-sync-alt"></i> Auto Rotate</button>
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="vr-btn vr-btn-blue"><i
+                        class="fas fa-bag-shopping"></i> Add to Bag</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('vr-canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor(0x000000);
+
+        // Lighting
+        scene.add(new THREE.AmbientLight(0x0071e3, 0.4));
+        const dl = new THREE.DirectionalLight(0xffffff, 1);
+        dl.position.set(5, 10, 7);
+        scene.add(dl);
+        const pl1 = new THREE.PointLight(0x0071e3, 1, 50);
+        pl1.position.set(-5, 5, 5);
+        scene.add(pl1);
+        const pl2 = new THREE.PointLight(0xbf4dff, 0.8, 50);
+        pl2.position.set(5, -3, -5);
+        scene.add(pl2);
+
+        // Object — Product with image texture
+        const textureLoader = new THREE.TextureLoader();
+        const productTex = textureLoader.load('{{ product.image_url }}');
+        const geo = new THREE.BoxGeometry(2, 2.5, 0.4);
+        const faceMats = [
+            new THREE.MeshPhysicalMaterial({ color: 0x444444, metalness: 0.5, roughness: 0.3 }),
+            new THREE.MeshPhysicalMaterial({ color: 0x444444, metalness: 0.5, roughness: 0.3 }),
+            new THREE.MeshPhysicalMaterial({ color: 0x555555, metalness: 0.5, roughness: 0.3 }),
+            new THREE.MeshPhysicalMaterial({ color: 0x555555, metalness: 0.5, roughness: 0.3 }),
+            new THREE.MeshPhysicalMaterial({ map: productTex, metalness: 0.1, roughness: 0.4, clearcoat: 1.0, clearcoatRoughness: 0.1 }),
+            new THREE.MeshPhysicalMaterial({ map: productTex, metalness: 0.1, roughness: 0.4, clearcoat: 1.0, clearcoatRoughness: 0.1 }),
+        ];
+        const cube = new THREE.Mesh(geo, faceMats);
+        scene.add(cube);
+
+        const wireGeo = new THREE.BoxGeometry(2.1, 2.6, 0.5);
+        const wireMat = new THREE.MeshBasicMaterial({ color: 0xbf4dff, wireframe: true, transparent: true, opacity: 0.12 });
+        const wire = new THREE.Mesh(wireGeo, wireMat);
+        scene.add(wire);
+
+        const grid = new THREE.GridHelper(20, 20, 0x1d1d1f, 0x111111);
+        grid.position.y = -2;
+        scene.add(grid);
+
+        // Particles
+        const pGeo = new THREE.BufferGeometry();
+        const pos = new Float32Array(500 * 3);
+        for (let i = 0; i < 1500; i++) pos[i] = (Math.random() - 0.5) * 30;
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x0071e3, size: 0.04, transparent: true, opacity: 0.5 })));
+
+        camera.position.z = 5;
+
+        let isDrag = false, prev = { x: 0, y: 0 };
+        let rot = { x: 0.3, y: 0.5 }, autoRot = true;
+
+        document.addEventListener('mousedown', e => { isDrag = true; prev = { x: e.clientX, y: e.clientY }; });
+        document.addEventListener('mouseup', () => isDrag = false);
+        document.addEventListener('mousemove', e => {
+            if (!isDrag) return;
+            autoRot = false;
+            rot.y += (e.clientX - prev.x) * 0.005;
+            rot.x += (e.clientY - prev.y) * 0.005;
+            prev = { x: e.clientX, y: e.clientY };
+        });
+        document.addEventListener('wheel', e => {
+            camera.position.z = Math.max(2, Math.min(15, camera.position.z + e.deltaY * 0.01));
+        });
+        document.addEventListener('touchstart', e => { isDrag = true; prev = { x: e.touches[0].clientX, y: e.touches[0].clientY }; });
+        document.addEventListener('touchend', () => isDrag = false);
+        document.addEventListener('touchmove', e => {
+            if (!isDrag) return; autoRot = false;
+            rot.y += (e.touches[0].clientX - prev.x) * 0.005;
+            rot.x += (e.touches[0].clientY - prev.y) * 0.005;
+            prev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (autoRot) rot.y += 0.005;
+            cube.rotation.set(rot.x, rot.y, 0);
+            wire.rotation.set(rot.x, rot.y, 0);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function resetView() { rot = { x: 0.3, y: 0.5 }; camera.position.z = 5; autoRot = true; }
+        function toggleAutoRotate() {
+            autoRot = !autoRot;
+            document.getElementById('auto-rotate-btn').innerHTML = autoRot
+                ? '<i class="fas fa-pause"></i> Pause'
+                : '<i class="fas fa-sync-alt"></i> Auto Rotate';
+        }
+    </script>
+</body>
+
+</html>
