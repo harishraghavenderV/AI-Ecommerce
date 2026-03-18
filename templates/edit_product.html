@@ -17,12 +17,12 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Price ($)</label>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Price (₹)</label>
                 <input type="number" step="0.01" name="price" value="{{ product.price if product else '' }}" required
                     class="apple-input">
             </div>
             <div>
-                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Original Price ($)</label>
+                <label class="block text-[13px] font-medium text-apple-text mb-1.5">Original Price (₹)</label>
                 <input type="number" step="0.01" name="original_price"
                     value="{{ product.original_price if product and product.original_price else '' }}"
                     class="apple-input" placeholder="Optional">
