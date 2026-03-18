@@ -16,22 +16,21 @@ import socket
 
 import random
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-import google.generativeai as genai
-
-
-
-load_dotenv()
-
-# Hardcoded for Vercel live demo
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEujFnU12ZOpDo5ao_s7olz5DAJz2k5go")
-
-if GEMINI_API_KEY:
-
-    genai.configure(api_key=GEMINI_API_KEY)
-
-
+try:
+    import google.generativeai as genai
+    # Hardcoded for Vercel live demo
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEujFnU12ZOpDo5ao_s7olz5DAJz2k5go")
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+    HAS_GENAI = True
+except ImportError:
+    HAS_GENAI = False
 
 app = Flask(__name__)
 
