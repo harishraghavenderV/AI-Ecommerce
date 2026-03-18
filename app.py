@@ -34,9 +34,16 @@ if GEMINI_API_KEY:
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = 'ai-ecommerce-secret-key-2024'
+# Vercel has a read-only filesystem; use /tmp for SQLite.
+# Locally, the db sits in the instance/ folder as normal.
+IS_VERCEL = os.environ.get('VERCEL', False)
+if IS_VERCEL:
+    DB_PATH = '/tmp/ecommerce.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ai-ecommerce-secret-key-2024')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
