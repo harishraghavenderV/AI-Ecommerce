@@ -24,7 +24,8 @@ import google.generativeai as genai
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Hardcoded for Vercel live demo
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEujFnU12ZOpDo5ao_s7olz5DAJz2k5go")
 
 if GEMINI_API_KEY:
 
@@ -43,7 +44,7 @@ if IS_VERCEL:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ai-ecommerce-secret-key-2024')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'trenzia-prod-secret-2024')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
