@@ -29,8 +29,9 @@ try:
     if GEMINI_API_KEY:
         genai.configure(api_key=GEMINI_API_KEY)
     HAS_GENAI = True
-except ImportError:
+except Exception as e:
     HAS_GENAI = False
+    print(f"Failed to load AI module: {e}", flush=True)
 
 app = Flask(__name__)
 
