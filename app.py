@@ -22,14 +22,15 @@ try:
 except ImportError:
     pass
 
+# Hardcoded for Vercel live demo
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEujFnU12ZOpDo5ao_s7olz5DAJz2k5go")
 try:
-    import google.generativeai as genai
-    # Hardcoded for Vercel live demo
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEujFnU12ZOpDo5ao_s7olz5DAJz2k5go")
-    if GEMINI_API_KEY:
-        genai.configure(api_key=GEMINI_API_KEY)
-    HAS_GENAI = True
+    from google import genai as genai_sdk
+    from google.genai import types as genai_types
+    _genai_client = genai_sdk.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+    HAS_GENAI = _genai_client is not None
 except Exception as e:
+    _genai_client = None
     HAS_GENAI = False
     print(f"Failed to load AI module: {e}", flush=True)
 
@@ -1592,7 +1593,7 @@ def personalized_description(product_id):
 
     try:
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        model = 'gemini-2.0-flash-lite'
 
         prompt = f"""Rewrite this product description to match the user's preferences.
 
@@ -1626,7 +1627,7 @@ Rules:
 
 
 
-        response = model.generate_content(prompt)
+        response = _genai_client.models.generate_content(model=model, contents=prompt)
 
         return jsonify({'description': response.text.strip()})
 
@@ -1664,7 +1665,7 @@ def compatibility_check(product_id):
 
     try:
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        model = 'gemini-2.0-flash-lite'
 
         prompt = f"""You are a product compatibility expert.
 
@@ -1696,7 +1697,7 @@ If the product category is completely unrelated to any device (e.g. clothing vs 
 
 
 
-        response = model.generate_content(prompt)
+        response = _genai_client.models.generate_content(model=model, contents=prompt)
 
         raw = response.text.strip()
 
@@ -1834,7 +1835,7 @@ def virtual_tryon():
 
     try:
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        model = 'gemini-2.0-flash-lite'
 
         prompt = f"""You are a fashion and styling expert. The user has uploaded a selfie and wants to know how the following product would look on them.
 
@@ -1864,13 +1865,9 @@ Be enthusiastic, specific, and helpful. Use 3-4 concise paragraphs. Format with 
 
 
 
-        import PIL.Image
-
-        img = PIL.Image.open(io.BytesIO(selfie_bytes))
-
-        response = model.generate_content([prompt, img])
-
-
+        # Virtual try-on requires Pillow (not available on Vercel)
+        # Gracefully fall back to text-only response
+        response = _genai_client.models.generate_content(model=model, contents=prompt)
 
         return jsonify({'result': response.text.strip()})
 
@@ -1930,7 +1927,7 @@ def vibe_search():
 
 
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        model = 'gemini-2.0-flash-lite'
 
         prompt = f"""You are an expert interior designer, fashion stylist, and lifestyle curator for an e-commerce store.
 
@@ -1968,7 +1965,7 @@ Respond ONLY in this strict JSON format (no markdown, no code fences):
 
 
 
-        response = model.generate_content(prompt)
+        response = _genai_client.models.generate_content(model=model, contents=prompt)
 
         raw = response.text.strip()
 
@@ -2007,45 +2004,24 @@ Respond ONLY in this strict JSON format (no markdown, no code fences):
                 enriched_picks.append({
 
                     'id': product.id,
-
                     'name': product.name,
-
                     'price': product.price,
-
                     'original_price': product.original_price,
-
                     'category': product.category,
-
                     'image_url': product.image_url,
-
                     'reason': pick.get('reason', ''),
-
                     'url': url_for('product_detail', product_id=product.id)
-
                 })
 
-
-
         return jsonify({
-
             'collection_name': result.get('collection_name', 'Curated for You'),
-
             'description': result.get('description', ''),
-
             'picks': enriched_picks
-
         })
-
     except Exception as e:
-
         import traceback
-
         print(f"Vibe Search Error:\n{traceback.format_exc()}")
-
         return jsonify({'error': 'Failed to process vibe search. Please try again.'}), 500
-
-
-
 
 
 # ─── VISUAL SEARCH ENDPOINT ──────────────────────────────
@@ -2432,7 +2408,7 @@ def api_size_recommendation():
 
     try:
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        model = 'gemini-2.0-flash-lite'
 
         prompt = f"""
 
@@ -2456,7 +2432,7 @@ Task:
 
 """
 
-        response = model.generate_content(prompt)
+        response = _genai_client.models.generate_content(model=model, contents=prompt)
 
         text = response.text.replace('```json', '').replace('```', '').strip()
 
@@ -2546,9 +2522,7 @@ Task:
 
 """
 
-        model = genai.GenerativeModel('gemini-2.5-flash-lite')
-
-        response = model.generate_content(prompt)
+        response = _genai_client.models.generate_content(model='gemini-2.0-flash-lite', contents=prompt)
 
         text = response.text.strip()
 
@@ -2655,50 +2629,31 @@ def chat_endpoint():
 
 
     try:
+        if not _genai_client:
+            return jsonify({'error': 'AI features are currently unavailable (missing API key)'}), 503
 
-        model = genai.GenerativeModel(
-
-            model_name='gemini-2.5-flash-lite',
-
-            tools=ai_tools,
-
-            system_instruction=f"""You are a helpful AI Assistant for ShopAI, an e-commerce store. The current user is '{current_user.username}'.
-
-
+        system_instruction = f"""You are a helpful AI Assistant for Trenzia, an Indian e-commerce store. The current user is '{current_user.username}'.
 
 You can help them with:
-
 1. **Search Products** — Find items by name or category.
-
-2. **Check Order Status** — Look up recent orders via track_user_orders (e.g. "where is my jacket?") or a specific order ID via get_order_status.
-
+2. **Check Order Status** — Look up recent orders or a specific order ID.
 3. **Add to Cart** — Add products directly to their shopping bag.
-
 4. **Raise Support Tickets** — File complaints or issues.
-
-5. **Negotiate Prices** — Users can haggle! If they ask for a discount, use the negotiate_price tool with the product_id and their offered_price. Be playful and act like a friendly market seller. If the deal is accepted, share the coupon code enthusiastically.
-
-6. **Gift Concierge** — If they need help finding a gift, use gift_concierge with the recipient description, occasion, and budget. Then curate 2-4 best picks from the results and write a heartfelt, personalized gift card message (2-3 sentences, warm and touching).
-
-
+5. **Negotiate Prices** — Users can haggle! Use negotiate_price with the product_id and their offered_price. Be playful and act like a friendly market seller.
+6. **Gift Concierge** — Use gift_concierge with recipient description, occasion, and budget.
 
 Always be polite, concise, and conversational. Use emoji sparingly. Format responses in Markdown.
+IMPORTANT: ALL prices are in Indian Rupees. ALWAYS use ₹ symbol. NEVER use $ or USD."""
 
-IMPORTANT: This is an Indian e-commerce store. ALL prices are in Indian Rupees. ALWAYS display prices with the ₹ symbol (e.g. ₹1,299). NEVER use $ or USD. If a price is given as a number, prefix it with ₹."""
-
+        chat = _genai_client.chats.create(
+            model='gemini-2.0-flash',
+            config=genai_types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=ai_tools,
+            )
         )
 
-        
-
-        # We send a single prompt with forced function calling if available, or auto.
-
-        # For simplicity, we create a one-off chat session to allow multi-turn function calling execution.
-
-        chat = model.start_chat(enable_automatic_function_calling=True)
-
         response = chat.send_message(user_message)
-
-        
 
         return jsonify({'response': response.text})
 
