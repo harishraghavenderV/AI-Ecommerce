@@ -22,9 +22,6 @@ def init_db_once():
         db.create_all()
         from models import Product, User
         if Product.query.count() == 0:
-            # Import seed data inline to avoid circular imports
-            from seed_data import seed
-            # seed() calls app.app_context() internally, so just call the inner logic instead
             _seed_inline()
         print("Vercel DB ready.", flush=True)
     except Exception as e:
@@ -65,23 +62,12 @@ def _seed_inline():
 
     db.session.commit()
 
-    # Import product data from seed_products.py which has full product list
+    # Seed products from seed_products.py
     try:
         import seed_products
         seed_products.run()
     except Exception as e:
         print(f"Product seeding error: {e}", flush=True)
-        # Fallback: seed a few basic products so the site has content
-        products = [
-            {'name': 'iPhone 15 Pro Max', 'description': 'Apple flagship smartphone with titanium design', 'price': 1349.99, 'original_price': 1499.99, 'category': 'Smartphones', 'stock': 30, 'image_url': 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop'},
-            {'name': 'MacBook Pro 14"', 'description': 'M3 chip, 14-inch Liquid Retina XDR display', 'price': 1999.99, 'original_price': 2199.99, 'category': 'Laptops', 'stock': 15, 'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop'},
-            {'name': 'Sony WH-1000XM5', 'description': 'Industry-leading noise canceling headphones', 'price': 299.99, 'original_price': 399.99, 'category': 'Electronics', 'stock': 49, 'image_url': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop'},
-        ]
-        for p in products:
-            prod = Product(**p, specs='{}')
-            db.session.add(prod)
-        db.session.commit()
 
-
-# Vercel expects the WSGI app exposed as 'app' or 'handler'
-handler = app
+# Vercel Python runtime requires the app exposed as a module-level callable named 'app'
+# Do NOT rename to 'handler' - that causes TypeError: issubclass() arg 1 must be a class
