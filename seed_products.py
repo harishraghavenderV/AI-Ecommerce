@@ -506,7 +506,7 @@ NEW_PRODUCTS = [
         "category": "Sports & Fitness",
         "price": 1299.00, "original_price": 1799.00,
         "stock": 200,
-        "image_url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=80",
+        "image_url": "/static/jump_rope.jpg",
         "description": "Precision steel cable speed rope with ball-bearing handles — perfect for double-unders.",
         "specs": json.dumps({"Cable": "1.5mm aerobic steel", "Handles": "Aluminium", "Bearings": "Ball bearing", "Length": "Adjustable to 3m", "Weight": "85g"}),
         "sketchfab": "4373130bc33c442eb5ed4a0bca818eaf",
