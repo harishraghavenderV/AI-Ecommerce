@@ -63,6 +63,10 @@ login_manager.init_app(app)
 
 login_manager.login_view = 'login'
 
+# Custom Jinja2 filter: parse JSON strings in templates
+import json as _json
+app.jinja_env.filters['fromjson'] = _json.loads
+
 
 
 
@@ -979,9 +983,9 @@ def checkout():
 
         db.session.commit()
 
-        flash('Order placed successfully!', 'success')
+        flash('Order placed successfully! 🎉', 'success')
 
-        return redirect(url_for('order_confirmation', order_id=order.id))
+        return redirect(url_for('orders', new_order=order.id))
 
 
 
@@ -1095,7 +1099,9 @@ def orders():
 
         
 
-    return render_template('orders.html', orders=user_orders, current_sort=sort, progress=order_progress)
+    new_order_id = request.args.get('new_order', type=int)
+
+    return render_template('orders.html', orders=user_orders, current_sort=sort, progress=order_progress, new_order_id=new_order_id)
 
 
 
