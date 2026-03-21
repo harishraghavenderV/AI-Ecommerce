@@ -46,8 +46,12 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'trenzia-prod-secret-2024')
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Fix Issue #1: Keep users logged in permanently across page navigation
+app.config['REMEMBER_COOKIE_DURATION'] = 60 * 60 * 24 * 30  # 30 days
+app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30  # 30 days
+app.config['SESSION_PERMANENT'] = True
 
 
 
@@ -180,13 +184,10 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password_hash, password):
-
-            login_user(user)
-
+            # Fix Issue #1: remember=True keeps session alive permanently
+            login_user(user, remember=True)
             flash('Welcome back!', 'success')
-
             next_page = request.args.get('next')
-
             return redirect(next_page or url_for('index'))
 
         flash('Invalid email or password.', 'error')
@@ -248,13 +249,10 @@ def register():
         )
 
         db.session.add(user)
-
         db.session.commit()
-
-        login_user(user)
-
-        flash('Account created successfully!', 'success')
-
+        # Fix Issue #1: Don't auto-login; redirect to login page so user can learn their credentials
+        login_user(user, remember=True)
+        flash(f'Account created! Welcome to Trenzia, {username}! You are now logged in.', 'success')
         return redirect(url_for('index'))
 
     return render_template('register.html')
@@ -2482,44 +2480,29 @@ def api_build_cart():
 
 
 
-        prompt = f"""
+        prompt = f"""You are the Trenzia AI Goal Shopper — a smart, friendly shopping assistant.
 
-You are the Trenzia AI Goal Shopper.
+The user said: "{goal}"
 
-A user has asked you to build a cart based on this goal:
+Your job:
+1. Understand their INTENT (what they actually need), not just the literal words.
+2. If they mention lifestyle/activity/occasion (e.g. "gym", "office", "travel", "gift for mom", "hiking"), pick the MOST RELEVANT products for that lifestyle.
+3. If they mention a budget (e.g. "under ₹5000", "within 10k", "50000 budget"), STRICTLY stay within it. Total must not exceed their budget.
+4. If no budget is mentioned, pick 2–5 best value products that fit perfectly.
+5. Pick 2–6 products maximum. Quality over quantity.
+6. The "reason" field must be a warm, personalized 1-sentence explanation.
+7. The "explanation" must be 2-3 friendly conversational sentences explaining the whole cart — like a personal shopping friend would.
 
-"{goal}"
-
-
-
-Here is the current inventory:
-
+Available inventory:
 {inventory_context}
 
-
-
-Task:
-
-1. Select the exact items the user needs to achieve this goal, staying strictly within their mentioned budget (if any).
-
-2. Choose logical, high-quality combinations. Do not exceed the budget.
-
-3. Return a JSON object with this exact structure (NO extra text, NO markdown formatting outside the curly braces, just raw JSON):
-
+Respond ONLY with raw JSON (no markdown, no code fences):
 {{
-
   "products": [
-
-    {{"id": 1, "reason": "Short reason why they need this"}},
-
-    {{"id": 2, "reason": "Short reason why they need this"}}
-
+    {{"id": 1, "reason": "Perfect for your goal because..."}}
   ],
-
-  "explanation": "A friendly 2-3 sentence explanation of the whole cart you built and how it hits their goal and budget."
-
+  "explanation": "Here's what I picked for you and why..."
 }}
-
 """
 
         response = _genai_client.models.generate_content(model='gemini-2.0-flash-lite', contents=prompt)
@@ -2632,18 +2615,22 @@ def chat_endpoint():
         if not _genai_client:
             return jsonify({'error': 'AI features are currently unavailable (missing API key)'}), 503
 
-        system_instruction = f"""You are a helpful AI Assistant for Trenzia, an Indian e-commerce store. The current user is '{current_user.username}'.
+        system_instruction = f"""You are Zara, a friendly and smart AI Shopping Assistant for Trenzia — an Indian e-commerce store. The current user is '{current_user.username}'.
 
-You can help them with:
-1. **Search Products** — Find items by name or category.
-2. **Check Order Status** — Look up recent orders or a specific order ID.
-3. **Add to Cart** — Add products directly to their shopping bag.
-4. **Raise Support Tickets** — File complaints or issues.
-5. **Negotiate Prices** — Users can haggle! Use negotiate_price with the product_id and their offered_price. Be playful and act like a friendly market seller.
-6. **Gift Concierge** — Use gift_concierge with recipient description, occasion, and budget.
+You can help with:
+1. **Search Products** — Use search_products() to find items by name, category, or description.
+2. **Check Order Status** — Use get_order_status() to track recent orders. Show status, items, and dates clearly.
+3. **Add to Cart** — Use add_to_cart_tool(product_id, quantity) to add items.
+4. **Report Defects & Raise Tickets** — IMPORTANT: If the user says a product is defective, damaged, not working, or wants a refund/replacement, ALWAYS call raise_ticket_tool() immediately. Ask them for the product name or ID first if they haven't mentioned it. Use a subject like "Defective Product: [product name]" and include the Product ID in the description.
+5. **Negotiate Prices** — Use negotiate_price(product_id, offered_price). Be playful like a friendly bazaar seller! 
+6. **Gift Concierge** — Use gift_concierge(recipient_description, occasion, budget) to find perfect gifts.
 
-Always be polite, concise, and conversational. Use emoji sparingly. Format responses in Markdown.
-IMPORTANT: ALL prices are in Indian Rupees. ALWAYS use ₹ symbol. NEVER use $ or USD."""
+IMPORTANT RULES:
+- ALL prices are in Indian Rupees (₹). NEVER use $ or USD.
+- When a user reports ANY product issue (defect, damage, not working, wrong item), IMMEDIATELY use raise_ticket_tool. Don't ask them to contact support manually.
+- If a user says "product ID X has a defect" or "order ID Y is broken", extract the ID and raise the ticket right away.
+- Always confirm after raising a ticket: share the ticket ID and reassure the user.
+- Format responses in Markdown. Be warm, helpful, and concise."""
 
         chat = _genai_client.chats.create(
             model='gemini-2.0-flash',

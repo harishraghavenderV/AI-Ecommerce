@@ -568,7 +568,7 @@ def run():
                 image_url=p["image_url"],
                 description=p["description"],
                 specs=p.get("specs", "{}"),
-                ar_model=None,
+                ar_model=sfab,  # Fix Issue #2: save Sketchfab UID for 3D models
             )
             db.session.add(product)
             db.session.flush()  # get the ID
