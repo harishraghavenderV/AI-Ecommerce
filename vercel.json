@@ -1,22 +1,10 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "excludeFiles": "static/models/**"
-      }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/static/(.*)",
-      "destination": "/static/$1"
+  "functions": {
+    "api/**/*.py": {
+      "maxDuration": 60
     },
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
+    "app.py": {
+      "maxDuration": 60
     }
-  ]
+  }
 }
