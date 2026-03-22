@@ -36,19 +36,28 @@ except Exception as e:
 
 app = Flask(__name__)
 
-# Vercel has a read-only filesystem; use /tmp for SQLite.
-# Locally, the db sits in the instance/ folder as normal.
-IS_VERCEL = os.environ.get('VERCEL', False)
-if IS_VERCEL:
-    DB_PATH = '/tmp/ecommerce.db'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+# ── Database Configuration ────────────────────────────────────────────────────
+# Priority: DATABASE_URL env var (Neon PostgreSQL on Vercel) → local SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+if DATABASE_URL:
+    # Neon/PostgreSQL: fix 'postgres://' -> 'postgresql://' for SQLAlchemy
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
+    # Local development — use SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'trenzia-prod-secret-2024')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,       # Check connection health before use
+    'pool_recycle': 300,         # Recycle connections every 5 min
+    'connect_args': {'sslmode': 'require'} if DATABASE_URL else {},
+}
 
-# Fix Issue #1: Keep users logged in permanently across page navigation
+# Keep users logged in permanently across page navigation
 app.config['REMEMBER_COOKIE_DURATION'] = 60 * 60 * 24 * 30  # 30 days
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30  # 30 days
 app.config['SESSION_PERMANENT'] = True
