@@ -2604,9 +2604,19 @@ Respond ONLY with raw JSON (no markdown, no code fences):
         err_msg = traceback.format_exc()
         print(f"AI Build Cart Error:\n{err_msg}")
         
-        # DEMO PRESENTATION FALLBACK
+        # DEMO PRESENTATION FALLBACK ("Smart Mock" that reads the budget)
         print("Falling back to AI Demo Mock Data...")
-        mock_products = Product.query.limit(3).all()
+        
+        import re
+        # Try to find a budget number in the user's prompt (e.g. "under 20000")
+        numbers = re.findall(r'\d+', goal)
+        budget = int(numbers[-1]) if numbers else None
+        
+        if budget:
+            mock_products = Product.query.filter(Product.price <= budget).limit(3).all()
+        else:
+            mock_products = Product.query.limit(3).all()
+            
         hydrated = []
         total = 0
         for p in mock_products:
@@ -2615,12 +2625,13 @@ Respond ONLY with raw JSON (no markdown, no code fences):
                 'name': p.name,
                 'price': p.price,
                 'image_url': p.image_url,
-                'reason': "This is a perfect top-rated item for your goal!"
+                'reason': "This is a perfect top-rated item within your budget constraints!"
             })
             total += p.price
+            
         return jsonify({
             'products': hydrated,
-            'explanation': "I found some fantastic options that perfectly match what you're looking for. These are our best sellers!",
+            'explanation': "I found some fantastic options that perfectly match what you're looking for while staying within budget. These are our best sellers!",
             'total': total
         })
 
