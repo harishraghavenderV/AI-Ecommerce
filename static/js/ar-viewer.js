@@ -172,6 +172,10 @@ function loadSketchfab(container, loadingEl, uid, productName) {
 }
 
 // ── QR code helper ────────────────────────────────────────────
+// Production URL — always points to Vercel so AR works on ANY network
+// (mobile data, different WiFi, iOS Quick Look, Android Scene Viewer).
+const PRODUCTION_URL = 'https://ai-ecommerce-eight.vercel.app';
+
 function generateProductQR(containerId, productId) {
     const el = document.getElementById(containerId);
     if (!el || typeof QRCode === 'undefined') return;
@@ -179,22 +183,24 @@ function generateProductQR(containerId, productId) {
     // Clear any previous QR
     el.innerHTML = '';
 
-    let origin = window.location.origin;
     const host = window.location.hostname;
+    let qrUrl;
 
-    // If visiting via localhost/127.0.0.1, replace with the server's LAN IP
-    // so the QR code works when scanned from a phone on the same WiFi network.
     if (host === 'localhost' || host === '127.0.0.1') {
-        // Try to get the LAN IP injected by the server (see base.html meta tag)
-        const lanIpMeta = document.querySelector('meta[name="lan-ip"]');
-        const lanIp = lanIpMeta ? lanIpMeta.getAttribute('content') : null;
-        if (lanIp) {
-            origin = 'http://' + lanIp + ':' + (window.location.port || '5000');
-        }
+        // Dev mode: QR always uses production Vercel URL so any phone
+        // on any network (mobile data, school WiFi, home WiFi) can scan it.
+        qrUrl = PRODUCTION_URL + '/ar/' + productId;
+        console.log('[AR] Dev mode — QR points to Vercel production:', qrUrl);
+    } else {
+        // Already on production — use current origin
+        qrUrl = window.location.origin + '/ar/' + productId;
+        console.log('[AR] Production mode QR URL:', qrUrl);
     }
 
-    const qrUrl = origin + '/ar/' + productId;
-    console.log('[AR] QR code URL:', qrUrl);
+    // Show the URL below QR for easy manual entry
+    const urlLabel = document.createElement('p');
+    urlLabel.style.cssText = 'font-size:10px;color:#86868b;margin-top:6px;word-break:break-all;text-align:center;';
+    urlLabel.textContent = qrUrl;
 
     new QRCode(el, {
         text: qrUrl,
@@ -204,6 +210,8 @@ function generateProductQR(containerId, productId) {
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
     });
+
+    el.appendChild(urlLabel);
 }
 
 // Expose globals

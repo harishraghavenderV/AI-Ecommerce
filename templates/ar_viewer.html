@@ -350,7 +350,10 @@
 
                 {% if glb_model_url %}
                 <!-- Native AR with Google Model Viewer -->
-                <model-viewer id="product-model-viewer" src="{{ glb_model_url }}" alt="{{ product.name }}"
+                <!-- glb_src_url is set below as an absolute URL for cross-network AR -->
+                <model-viewer id="product-model-viewer"
+                    src=""
+                    alt="{{ product.name }}"
                     poster="{{ product.image_url }}" auto-rotate camera-controls ar
                     ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor" bounds="tight" shadow-intensity="1"
                     shadow-softness="1" environment-image="neutral" exposure="1" touch-action="pan-y"
@@ -400,6 +403,24 @@
         const container = document.getElementById('model-container');
         const loadingEl = document.getElementById('ar-loading');
         const hasGlb = {{ 'true' if glb_model_url else 'false' }};
+
+        // ──── Build absolute GLB URL for cross-network AR ────
+        // iOS Quick Look & Android Scene Viewer NEED an absolute HTTPS URL.
+        // When on localhost, we swap to the Vercel production domain so phones
+        // on any network (mobile data, different WiFi) can fetch the model.
+        const PRODUCTION_BASE = 'https://ai-ecommerce-eight.vercel.app';
+        const glbRelativePath = '{{ glb_model_url or "" }}';
+
+        if (hasGlb && glbRelativePath) {
+            const mv = document.getElementById('product-model-viewer');
+            if (mv) {
+                const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                const base = isLocal ? PRODUCTION_BASE : location.origin;
+                const absGlbUrl = base + glbRelativePath;
+                mv.setAttribute('src', absGlbUrl);
+                console.log('[AR] model-viewer src set to:', absGlbUrl);
+            }
+        }
 
         // ──── Detect mobile ────
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
