@@ -2729,6 +2729,57 @@ with app.app_context():
     db.create_all()
 
 
+# ─── NGROK INTEGRATION ──────────────────────────────────
+
+import subprocess
+import threading
+
+_ngrok_url = None  # cached ngrok public URL
+
+def _start_ngrok():
+    """Launch ngrok in background and cache the public URL."""
+    global _ngrok_url
+    try:
+        subprocess.Popen(
+            ['ngrok', 'http', '5000', '--log', 'stdout'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        import time
+        time.sleep(2.5)  # Give ngrok time to start
+        resp = requests.get('http://127.0.0.1:4040/api/tunnels', timeout=5)
+        tunnels = resp.json().get('tunnels', [])
+        for t in tunnels:
+            if t.get('proto') == 'https':
+                _ngrok_url = t['public_url']
+                print(f'[ngrok] Public URL: {_ngrok_url}')
+                return
+        # fallback: pick the first tunnel
+        if tunnels:
+            _ngrok_url = tunnels[0]['public_url']
+            print(f'[ngrok] Public URL (http): {_ngrok_url}')
+    except Exception as e:
+        print(f'[ngrok] Could not start or detect ngrok: {e}')
+
+
+@app.route('/api/ngrok-url')
+def api_ngrok_url():
+    """Return the active ngrok tunnel URL so the frontend can build QR codes."""
+    global _ngrok_url
+    # If not cached, try to fetch from running ngrok
+    if not _ngrok_url:
+        try:
+            resp = requests.get('http://127.0.0.1:4040/api/tunnels', timeout=2)
+            tunnels = resp.json().get('tunnels', [])
+            for t in tunnels:
+                if t.get('proto') == 'https':
+                    _ngrok_url = t['public_url']
+                    break
+            if not _ngrok_url and tunnels:
+                _ngrok_url = tunnels[0]['public_url']
+        except Exception:
+            pass
+    return jsonify({'ngrok_url': _ngrok_url})
 
 
 

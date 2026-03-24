@@ -176,33 +176,54 @@ function generateProductQR(containerId, productId) {
     const el = document.getElementById(containerId);
     if (!el || typeof QRCode === 'undefined') return;
 
-    // Clear any previous QR
     el.innerHTML = '';
 
-    let origin = window.location.origin;
-    const host = window.location.hostname;
+    function buildQR(baseOrigin) {
+        const qrUrl = baseOrigin + '/ar/' + productId;
+        console.log('[AR] QR code URL:', qrUrl);
+        el.innerHTML = '';
+        new QRCode(el, {
+            text: qrUrl,
+            width: 160,
+            height: 160,
+            colorDark: '#1d1d1f',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
 
-    // If on localhost/127.0.0.1, use the LAN IP injected by the server
-    // so the phone on the same WiFi can scan the QR and open the AR page.
-    if (host === 'localhost' || host === '127.0.0.1') {
-        const lanIpMeta = document.querySelector('meta[name="lan-ip"]');
-        const lanIp = lanIpMeta ? lanIpMeta.getAttribute('content') : null;
-        if (lanIp) {
-            origin = 'http://' + lanIp + ':' + (window.location.port || '5000');
-        }
+        // Show the URL below QR for easy manual access
+        const label = document.createElement('p');
+        label.style.cssText = 'font-size:9px;color:#86868b;text-align:center;margin-top:6px;word-break:break-all;max-width:160px;';
+        label.textContent = qrUrl;
+        el.appendChild(label);
     }
 
-    const qrUrl = origin + '/ar/' + productId;
-    console.log('[AR] QR code URL:', qrUrl);
+    const host = window.location.hostname;
 
-    new QRCode(el, {
-        text: qrUrl,
-        width: 150,
-        height: 150,
-        colorDark: '#1d1d1f',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-    });
+    // Step 1: Ask our backend if ngrok is active
+    fetch('/api/ngrok-url')
+        .then(r => r.json())
+        .then(data => {
+            if (data.ngrok_url) {
+                console.log('[AR] Using ngrok URL:', data.ngrok_url);
+                buildQR(data.ngrok_url);
+            } else {
+                // Step 2: Fall back to LAN IP
+                let origin = window.location.origin;
+                if (host === 'localhost' || host === '127.0.0.1') {
+                    const lanIpMeta = document.querySelector('meta[name="lan-ip"]');
+                    const lanIp = lanIpMeta ? lanIpMeta.getAttribute('content') : null;
+                    if (lanIp) {
+                        origin = 'http://' + lanIp + ':' + (window.location.port || '5000');
+                    }
+                }
+                buildQR(origin);
+            }
+        })
+        .catch(() => {
+            // Step 3: Network error — use current origin
+            buildQR(window.location.origin);
+        });
 }
 
 // Expose globals
