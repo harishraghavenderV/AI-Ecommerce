@@ -833,23 +833,26 @@
 
             setTimeout(function () {
 
+                // Build absolute URL so model loads on ALL networks (mobile data, any WiFi)
+                var PROD_BASE = 'https://ai-ecommerce-delta.vercel.app';
+                var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                var base = isLocal ? PROD_BASE : location.origin;
+
+                var rawGlb = '{% if glb_model_url %}{{ glb_model_url }}{% elif product.ar_model %}{{ product.ar_model }}{% endif %}';
+                // If rawGlb is a relative path (starts with /), make it absolute
+                var modelSrc = rawGlb && rawGlb.startsWith('/') ? base + rawGlb : rawGlb;
+
                 loadARModel(
-
                     'ar-modal-viewer',
-
                     {{ product.id }},
+                    modelSrc,
+                    '{{ product.name | replace("'", "\\'") }}',
+                    '{{ product.image_url }}'
+                );
 
-                '{% if glb_model_url %}{{ glb_model_url }}{% elif product.ar_model %}{{ product.ar_model }}{% endif %}',
+            }, 150);
 
-                '{{ product.name | replace("'", "\\'") }}',
-
-                '{{ product.image_url }}'
-
-            );
-
-        }, 150);
-
-    }
+        }
 
     // Generate QR once
 
