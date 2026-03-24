@@ -92,6 +92,8 @@ function loadARModel(containerId, productId, modelSrc, productName, productImage
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 ar-scale="auto"
+                ar-placement="floor"
+                bounds="tight"
                 auto-rotate
                 auto-rotate-delay="0"
                 camera-controls
