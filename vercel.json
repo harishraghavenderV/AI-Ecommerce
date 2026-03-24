@@ -1,12 +1,25 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "maxDuration": 60
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
     },
-    "app.py": {
-      "maxDuration": 60
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
     }
-  },
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
+    }
+  ],
   "headers": [
     {
       "source": "/static/models/(.*)\\.glb",
