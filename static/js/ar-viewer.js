@@ -174,7 +174,7 @@ function loadSketchfab(container, loadingEl, uid, productName) {
 // ── QR code helper ────────────────────────────────────────────
 // Production URL — always points to Vercel so AR works on ANY network
 // (mobile data, different WiFi, iOS Quick Look, Android Scene Viewer).
-const PRODUCTION_URL = 'https://ai-ecommerce-eight.vercel.app';
+const PRODUCTION_URL = 'https://ai-ecommerce-delta.vercel.app';
 
 function generateProductQR(containerId, productId) {
     const el = document.getElementById(containerId);
